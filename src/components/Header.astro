@@ -30,10 +30,10 @@ const { active } = Astro.props;
 // 想加項目就 push 一筆；中文是給使用者看的，英文是 active 高亮 key。
 // （/atelier、/installation、/wedding、/seasonal 仍可從頁尾或直接網址訪問）
 const links: Array<[string, string, string]> = [
-  ['News',    '最新消息',  '/'],
-  ['Works',   '作品瀏覽',  '/works'],
-  ['Shop',    '線上購物',  '/shop'],
-  ['Contact', '聯絡我們',  '/enquiry'],
+  ['News',    '最新消息',  `${import.meta.env.BASE_URL}`],
+  ['Works',   '作品瀏覽',  `${import.meta.env.BASE_URL}works`],
+  ['Shop',    '線上購物',  `${import.meta.env.BASE_URL}shop`],
+  ['Contact', '聯絡我們', `${import.meta.env.BASE_URL}enquiry`],
 ];
 ---
 <header class="sf-header">
@@ -54,7 +54,7 @@ const links: Array<[string, string, string]> = [
     ))}
   </nav>
 
-  <a href="/enquiry" class="sf-header__cta">Reserve a date <span aria-hidden="true">→</span></a>
+  <a href={`${import.meta.env.BASE_URL}enquiry`} class="sf-header__cta">Reserve a date <span aria-hidden="true">→</span></a>
 
   <button
     class="sf-burger"
@@ -97,7 +97,7 @@ const links: Array<[string, string, string]> = [
       ))}
     </nav>
     <div class="sf-mobile-menu__foot">
-      <a href="/enquiry" class="sf-mobile-menu__cta">
+      <a href={`${import.meta.env.BASE_URL}enquiry`} class="sf-mobile-menu__cta">
         Reserve a date · 預約 <span aria-hidden="true">→</span>
       </a>
       <p class="sf-mobile-menu__tagline">
