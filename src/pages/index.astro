@@ -92,8 +92,9 @@ const works = (await getCollection('works', ({ data }) =>
 function heroImg(work: typeof works[number]) {
   return work.data.images.find(i => i.id === work.data.hero) || work.data.images[0];
 }
+const imgBase = import.meta.env.BASE_URL.replace(/\/$/, '');
 function srcset(variants: any[], format: 'webp' | 'avif') {
-  return variants.filter(v => v.format === format).map(v => `${v.src} ${v.width}w`).join(', ');
+  return variants.filter(v => v.format === format).map(v => `${imgBase}${v.src} ${v.width}w`).join(', ');
 }
 ---
 <SitePage
@@ -344,7 +345,7 @@ function srcset(variants: any[], format: 'webp' | 'avif') {
                       <source type="image/webp" srcset={srcset(img.variants, 'webp')} sizes="(min-width: 960px) 380px, 100vw" />
                       <img
                         data-parallax="0.018"
-                        src={img.variants.find(v => v.format === 'webp')?.src}
+                        src={`${import.meta.env.BASE_URL.replace(/\/$/,'')}${img.variants.find(v => v.format === 'webp')?.src}`}
                         alt={img.alt}
                         width={img.width}
                         height={img.height}
