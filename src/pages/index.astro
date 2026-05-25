@@ -142,7 +142,7 @@ function srcset(variants: any[], format: 'webp' | 'avif') {
             {slides.map((s, i) => (
               s.imageExists ? (
                 <img
-                  src={`/news/${s.image}`}
+                  src={`${import.meta.env.BASE_URL}news/${s.image}`}
                   alt={s.imageAlt || s.titleTc || s.title || ''}
                   data-slide-index={i}
                   data-state={i === 0 ? 'active' : undefined}
@@ -306,21 +306,21 @@ function srcset(variants: any[], format: 'webp' | 'avif') {
         <h3 class="service__title">Installation Art</h3>
         <p class="service__tc">裝置藝術</p>
         <p class="service__lead">Sculptural objects and spatial interventions, the visual anchor of a venue.</p>
-        <a href="/installation" class="service__more">See work <span aria-hidden="true">→</span></a>
+        <a href={`${import.meta.env.BASE_URL}installation`} class="service__more">See work <span aria-hidden="true">→</span></a>
       </li>
       <li class="service">
         <span class="service__num">02</span>
         <h3 class="service__title">Wedding Design</h3>
         <p class="service__tc">婚禮佈置</p>
         <p class="service__lead">Architectural choreography of an event space: movement, voids, and balance.</p>
-        <a href="/wedding" class="service__more">See work <span aria-hidden="true">→</span></a>
+        <a href={`${import.meta.env.BASE_URL}wedding`} class="service__more">See work <span aria-hidden="true">→</span></a>
       </li>
       <li class="service">
         <span class="service__num">03</span>
         <h3 class="service__title">Seasonal Florals</h3>
         <p class="service__tc">節慶花禮</p>
         <p class="service__lead">Object-scale gift work, where a single stem is treated as composition.</p>
-        <a href="/seasonal" class="service__more">See work <span aria-hidden="true">→</span></a>
+        <a href={`${import.meta.env.BASE_URL}seasonal`} class="service__more">See work <span aria-hidden="true">→</span></a>
       </li>
     </ol>
   </section>
@@ -329,14 +329,14 @@ function srcset(variants: any[], format: 'webp' | 'avif') {
     <section class="works">
       <header class="works__head">
         <EyebrowRule en="Recent Works" tc="最近作品" />
-        <a href="/works" class="works__all">All works <span aria-hidden="true">→</span></a>
+        <a href={`${import.meta.env.BASE_URL}works`} class="works__all">All works <span aria-hidden="true">→</span></a>
       </header>
       <div class="works__grid">
         {works.map((w) => {
           const img = heroImg(w);
           return (
             <article class="work">
-              <a href={`/works/${w.id}`}>
+              <a href={`${import.meta.env.BASE_URL}works/${w.id}`}>
                 {img && (
                   <figure class="work__figure">
                     <picture>
@@ -369,7 +369,7 @@ function srcset(variants: any[], format: 'webp' | 'avif') {
 
   {works.length === 0 && import.meta.env.DEV && (
     <section class="works empty">
-      <p class="muted">No works yet. <a href="/admin">Open /admin to curate.</a></p>
+      <p class="muted">No works yet. <a href={`${import.meta.env.BASE_URL}admin`}>Open /admin to curate.</a></p>
     </section>
   )}
 </SitePage>
