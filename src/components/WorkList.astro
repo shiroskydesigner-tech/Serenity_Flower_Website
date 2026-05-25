@@ -63,8 +63,9 @@ if (limit) works = works.slice(0, limit);
 function heroImg(w: typeof works[number]) {
   return w.data.images.find(i => i.id === w.data.hero) || w.data.images[0];
 }
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 function srcset(variants: any[], format: 'webp' | 'avif') {
-  return variants.filter(v => v.format === format).map(v => `${v.src} ${v.width}w`).join(', ');
+  return variants.filter(v => v.format === format).map(v => `${base}${v.src} ${v.width}w`).join(', ');
 }
 
 // ─── 互動式篩選：算出實際被使用的 tag，並按 tags.json 的順序與分組排列 ───
@@ -146,7 +147,7 @@ const filterGroups = groupOrder
                     <source type="image/webp" srcset={srcset(img.variants, 'webp')} sizes="(min-width: 960px) 380px, 50vw" />
                     <img
                       data-parallax="0.014"
-                      src={img.variants.find(v => v.format === 'webp')?.src}
+                      src={`${import.meta.env.BASE_URL.replace(/\/$/, '')}${img.variants.find(v => v.format === 'webp')?.src}`}
                       alt={img.alt}
                       loading="lazy"
                       style={`background-image: url(${img.lqip}); background-size: cover; background-position: center;`}
