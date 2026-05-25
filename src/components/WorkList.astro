@@ -1,0 +1,477 @@
+---
+/**
+ * WorkList（作品縮圖網格 — 共用元件）
+ * ─────────────────────────────────────────────────
+ * 用途：顯示一組作品卡片（縮圖正方形 + 標題 + 日期）。
+ *       支援用 tag 過濾、限制顯示數量、空狀態文字、互動式 tag 篩選。
+ *
+ * 使用範例：
+ *   <WorkList />                                   ← 顯示全部作品
+ *   <WorkList filterTags={["wedding"]} />          ← 伺服器端預先過濾
+ *   <WorkList limit={6} />                         ← 只顯示最新 6 件
+ *   <WorkList interactive />                       ← 加上 client-side 篩選 UI（用於 /works）
+ *
+ * 怎麼設定：
+ *   ▸ 改縮圖比例 → 下方 .work-card__figure { aspect-ratio: 1 / 1 }（改 16/9、4/5 等）
+ *   ▸ 改卡片排版 → .work-list { grid-template-columns: repeat(3, 1fr) }
+ *   ▸ 改 hover 縮放幅度 → .work-card a:hover ... img { scale: 1.08 }
+ *   ▸ 改 hover 內框反白 → .work-card__figure::after 的 inset 值與 border
+ *   ▸ 改卡片標題下緣動畫 → .work-card h3::after
+ *   ▸ 改響應式斷點 → 看最下方 @media（≤960px 變兩欄、≤560px 變一欄）
+ *   ▸ 加 / 改篩選 tag 定義 → src/content/tags.json
+ *   ▸ 改篩選 chip 外觀 → .sf-tagfilter__chip
+ *   ▸ 改篩選分組顯示 → groupLabels 與下方 group 標題
+ *
+ * 資料來源：src/content/works/*.md（由 admin 介面發佈或 batch-publish 腳本產生）
+ */
+import { getCollection } from 'astro:content';
+import tagsData from '../content/tags.json';
+
+interface Props {
+  /** 單一 tag（舊版用法）。 */
+  filterTag?: string;
+  /** 多個 tag — 作品只要符合任一個就會顯示。 */
+  filterTags?: string[];
+  /** 限制顯示前 N 件（不設則全部顯示）。 */
+  limit?: number;
+  /** 沒有作品時顯示的提示文字。 */
+  emptyMessage?: string;
+  /** 啟用互動式 tag 篩選 UI（chip 可點選切換）。 */
+  interactive?: boolean;
+}
+const {
+  filterTag,
+  filterTags,
+  limit,
+  emptyMessage = 'No works yet in this category.',
+  interactive = false,
+} = Astro.props;
+
+let works = (await getCollection('works', ({ data }) =>
+  import.meta.env.DEV ? true : data.status === 'published'
+)).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+const tagSet = new Set<string>([
+  ...(filterTag ? [filterTag] : []),
+  ...(filterTags || []),
+]);
+if (tagSet.size > 0) {
+  works = works.filter(w => w.data.tags.some(t => tagSet.has(t)));
+}
+if (limit) works = works.slice(0, limit);
+
+function heroImg(w: typeof works[number]) {
+  return w.data.images.find(i => i.id === w.data.hero) || w.data.images[0];
+}
+function srcset(variants: any[], format: 'webp' | 'avif') {
+  return variants.filter(v => v.format === format).map(v => `${v.src} ${v.width}w`).join(', ');
+}
+
+// ─── 互動式篩選：算出實際被使用的 tag，並按 tags.json 的順序與分組排列 ───
+type TagDef = { slug: string; name: string; group: string; description?: string };
+const allTagDefs = tagsData as TagDef[];
+
+const usedSlugs = new Set<string>();
+for (const w of works) for (const t of w.data.tags) usedSlugs.add(t);
+
+// 分組顯示用的中文標籤
+const groupLabels: Record<string, { tc: string; en: string }> = {
+  form:     { tc: '外型',  en: 'Form' },
+  scene:    { tc: '場合',  en: 'Scene' },
+  occasion: { tc: '時節',  en: 'Occasion' },
+  kind:     { tc: '類別',  en: 'Kind' },
+};
+const groupOrder = ['form', 'scene', 'occasion', 'kind'];
+
+const filterGroups = groupOrder
+  .map(g => ({
+    group: g,
+    label: groupLabels[g] || { tc: g, en: g },
+    tags: allTagDefs.filter(t => t.group === g && usedSlugs.has(t.slug)),
+  }))
+  .filter(g => g.tags.length > 0);
+---
+{interactive && filterGroups.length > 0 && (
+  <section class="sf-tagfilter" aria-label="作品分類篩選">
+    <header class="sf-tagfilter__head">
+      <span class="sf-tagfilter__eyebrow">
+        <span class="sf-tagfilter__rule" aria-hidden="true"></span>
+        Filter · 篩選
+      </span>
+      <span class="sf-tagfilter__status" aria-live="polite">{works.length} 件作品</span>
+      <button type="button" class="sf-tagfilter__clear" hidden>
+        清除全部 · Clear
+      </button>
+    </header>
+    <div class="sf-tagfilter__groups">
+      {filterGroups.map(g => (
+        <div class="sf-tagfilter__group">
+          <span class="sf-tagfilter__grouplabel">
+            <span class="sf-tagfilter__grouplabel-tc">{g.label.tc}</span>
+            <span class="sf-tagfilter__grouplabel-en">{g.label.en}</span>
+          </span>
+          <div class="sf-tagfilter__chips" role="group" aria-label={g.label.tc}>
+            {g.tags.map(t => (
+              <button
+                type="button"
+                class="sf-tagfilter__chip"
+                data-slug={t.slug}
+                aria-pressed="false"
+                title={t.description}
+              >
+                {t.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+)}
+
+{works.length === 0 ? (
+  <p class="work-list__empty">{emptyMessage}</p>
+) : (
+  <>
+    <div class="work-list" data-interactive={interactive ? 'true' : 'false'}>
+      {works.map(w => {
+        const img = heroImg(w);
+        return (
+          <article class="work-card" data-tags={w.data.tags.join(' ')}>
+            <a href={`/works/${w.id}`}>
+              {img && (
+                <figure class="work-card__figure">
+                  <picture>
+                    <source type="image/avif" srcset={srcset(img.variants, 'avif')} sizes="(min-width: 960px) 380px, 50vw" />
+                    <source type="image/webp" srcset={srcset(img.variants, 'webp')} sizes="(min-width: 960px) 380px, 50vw" />
+                    <img
+                      data-parallax="0.014"
+                      src={img.variants.find(v => v.format === 'webp')?.src}
+                      alt={img.alt}
+                      loading="lazy"
+                      style={`background-image: url(${img.lqip}); background-size: cover; background-position: center;`}
+                    />
+                  </picture>
+                </figure>
+              )}
+              <h3>{w.data.title}</h3>
+              <p class="work-card__meta">
+                <span>{w.data.date.toISOString().slice(0, 10)}</span>
+                {w.data.status === 'draft' && <span class="work-card__draft">DRAFT</span>}
+              </p>
+            </a>
+          </article>
+        );
+      })}
+    </div>
+    {/* 篩選後 0 結果的提示（預設隱藏，由 JS 切換顯示）*/}
+    {interactive && (
+      <p class="work-list__empty work-list__empty--filtered" hidden>
+        沒有符合篩選條件的作品。<br/>
+        <span class="work-list__empty-en">No works match the selected filters.</span>
+      </p>
+    )}
+  </>
+)}
+
+{interactive && (
+  <script is:inline>
+    (() => {
+      const filter = document.querySelector('.sf-tagfilter');
+      const grid = document.querySelector('.work-list[data-interactive="true"]');
+      if (!filter || !grid) return;
+
+      const chips = filter.querySelectorAll('.sf-tagfilter__chip');
+      const clearBtn = filter.querySelector('.sf-tagfilter__clear');
+      const status = filter.querySelector('.sf-tagfilter__status');
+      const cards = grid.querySelectorAll('.work-card');
+      const emptyFiltered = document.querySelector('.work-list__empty--filtered');
+      const totalCount = cards.length;
+      const active = new Set();
+
+      function update() {
+        chips.forEach(c => c.setAttribute('aria-pressed', String(active.has(c.dataset.slug))));
+        let visible = 0;
+        cards.forEach(card => {
+          const tags = (card.dataset.tags || '').split(' ').filter(Boolean);
+          const show = active.size === 0 || tags.some(t => active.has(t));
+          card.hidden = !show;
+          if (show) visible++;
+        });
+        if (clearBtn) clearBtn.hidden = active.size === 0;
+        if (status) {
+          status.textContent = active.size === 0
+            ? `${totalCount} 件作品`
+            : `篩選中：${visible} / ${totalCount} 件`;
+        }
+        if (emptyFiltered) emptyFiltered.hidden = !(active.size > 0 && visible === 0);
+      }
+
+      chips.forEach(c => {
+        c.addEventListener('click', () => {
+          const slug = c.dataset.slug;
+          if (active.has(slug)) active.delete(slug);
+          else active.add(slug);
+          update();
+        });
+      });
+      if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+          active.clear();
+          update();
+        });
+      }
+    })();
+  </script>
+)}
+
+<style>
+  /* ─── Tag filter UI ────────────────────────────────── */
+  .sf-tagfilter {
+    margin: 0 0 var(--s-7);
+    padding: var(--s-5) 0 var(--s-6);
+    border-top: 1px solid var(--ink-10);
+    border-bottom: 1px solid var(--ink-10);
+  }
+  .sf-tagfilter__head {
+    display: flex;
+    align-items: center;
+    gap: var(--s-4);
+    margin-bottom: var(--s-5);
+    flex-wrap: wrap;
+  }
+  .sf-tagfilter__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--font-body-en);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--bark);
+  }
+  .sf-tagfilter__rule {
+    display: inline-block;
+    width: 28px;
+    height: 2px;
+    background: var(--bark);
+  }
+  .sf-tagfilter__status {
+    font-family: var(--font-body-tc);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--ink-70);
+    margin-left: auto;
+  }
+  .sf-tagfilter__clear {
+    font-family: var(--font-body-en);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: transparent;
+    background-image: none;
+    border: 1px solid var(--ink);
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .sf-tagfilter__clear:hover { background: var(--ink); color: var(--white); }
+
+  .sf-tagfilter__groups {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+  }
+  .sf-tagfilter__group {
+    display: grid;
+    grid-template-columns: 92px 1fr;
+    gap: var(--s-4);
+    align-items: center;
+  }
+  .sf-tagfilter__grouplabel {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-left: 2px solid var(--bark);
+    padding-left: var(--s-3);
+  }
+  .sf-tagfilter__grouplabel-tc {
+    font-family: var(--font-display-tc);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    color: var(--ink);
+    line-height: 1.1;
+  }
+  .sf-tagfilter__grouplabel-en {
+    font-family: var(--font-body-en);
+    font-size: 9px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ink-70);
+    line-height: 1;
+  }
+  .sf-tagfilter__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .sf-tagfilter__chip {
+    font-family: var(--font-body-tc);
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    background: transparent;
+    background-image: none;
+    border: 1px solid var(--ink-20);
+    padding: 8px 14px;
+    min-height: 36px;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+  .sf-tagfilter__chip:hover {
+    border-color: var(--bark);
+    color: var(--bark);
+  }
+  .sf-tagfilter__chip[aria-pressed="true"] {
+    background: var(--ink);
+    color: var(--white);
+    border-color: var(--ink);
+  }
+  .sf-tagfilter__chip[aria-pressed="true"]:hover {
+    background: var(--bark);
+    border-color: var(--bark);
+  }
+
+  /* 篩選後 0 結果提示 */
+  .work-list__empty--filtered {
+    line-height: 1.8;
+  }
+  .work-list__empty-en {
+    font-style: normal;
+    font-size: 13px;
+    color: var(--ink-70);
+    letter-spacing: 0.08em;
+  }
+
+  /* ─── Work grid ────────────────────────────────────── */
+  .work-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--s-7) var(--s-6);
+  }
+  .work-list__empty {
+    font-family: var(--font-display-en);
+    font-style: italic;
+    color: var(--ink-70);          /* ink-40→ink-70：空狀態文字達 WCAG AA */
+    padding: var(--s-9) 0;
+    text-align: center;
+    max-width: none;
+  }
+  .work-card a { display: block; background-image: none; }
+  .work-card__figure {
+    margin: 0 0 var(--s-3);
+    background: var(--white);
+    overflow: hidden;
+    aspect-ratio: 1 / 1;     /* 1:1 enforced */
+    position: relative;
+  }
+  /* Inset hairline frame — reveals on hover, brand's preferred elevation */
+  .work-card__figure::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--white);
+    opacity: 0;
+    transform: scale(0.94);
+    transition: opacity 0.2s ease,
+                transform 0.2s ease,
+                inset 0.2s ease;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .work-card__figure img {
+    --parallax-scale: 1.045;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;        /* fills square without distortion (centre-crop) */
+    object-position: center;
+    display: block;
+    scale: 1;                 /* composes with parallax transform */
+    transition: scale 0.2s ease, filter 0.2s ease;
+  }
+  .work-card a:hover .work-card__figure img {
+    scale: 1.08;
+    filter: contrast(1.05) saturate(1.04);
+  }
+  .work-card a:hover .work-card__figure::after {
+    opacity: 1;
+    transform: scale(1);
+    inset: 10px;
+  }
+  .work-card h3 {
+    font-family: var(--font-display-en);
+    font-size: 22px;
+    font-weight: 400;
+    margin: 0;
+    position: relative;
+    display: inline-block;
+    color: var(--ink);
+    transition: color 0.2s ease,
+                transform 0.2s ease;
+  }
+  /* Underline reveal — extends left → right from zero width */
+  .work-card h3::after {
+    content: '';
+    position: absolute;
+    left: 0; bottom: -3px;
+    width: 0; height: 1px;
+    background: var(--bark);
+    transition: width 0.2s ease;
+  }
+  .work-card a:hover h3 {
+    color: var(--bark);
+    transform: translateX(4px);
+  }
+  .work-card a:hover h3::after { width: 100%; }
+  .work-card__meta {
+    font-family: var(--font-body-en);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-70);
+    margin: var(--s-1) 0 0;
+    display: flex; gap: var(--s-3); align-items: center;
+  }
+  .work-card__draft {
+    padding: 2px 6px;
+    border: 1px solid var(--bark);
+    color: var(--bark);
+    font-size: 9px;
+  }
+  /* Tablet ≤ 960：兩欄 + 篩選 chip 改成標籤橫排在 chips 上方 */
+  @media (max-width: 960px) {
+    .work-list { grid-template-columns: repeat(2, 1fr); gap: var(--s-6) var(--s-5); }
+    .work-card h3 { font-size: 20px; }
+    .sf-tagfilter__group {
+      grid-template-columns: 1fr;
+      gap: var(--s-2);
+    }
+    .sf-tagfilter__grouplabel { padding-left: var(--s-2); }
+  }
+  /* Mobile ≤ 640：單欄、chip 字級略縮 */
+  @media (max-width: 640px) {
+    .work-list { grid-template-columns: 1fr; gap: var(--s-7); }
+    .work-card h3 { font-size: 22px; }
+    .sf-tagfilter__chip { font-size: 12px; padding: 7px 12px; }
+    .sf-tagfilter__head { gap: var(--s-3); }
+    .sf-tagfilter__status { margin-left: 0; width: 100%; order: 3; }
+    .sf-tagfilter__clear { order: 2; }
+  }
+</style>

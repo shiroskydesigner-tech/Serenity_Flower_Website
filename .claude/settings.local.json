@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls .claude && mkdir -p .claude/skills)",
+      "Bash(mkdir -p .claude/skills/image-manager/scripts && ls Ref_Photo/ 2>&1 | head -20)",
+      "Edit(/.claude/skills/image-manager/**)",
+      "Read(//d/SynologyDrive/02_靜謐花間_0A/02_作品照片區/20250930_OK_鬱金香/RAW/OK/**)",
+      "Read(//d/SynologyDrive/02_靜謐花間_0A/02_作品照片區/20260124_Se_黑色_八角_藝術品/JPEG/**)",
+      "Read(//d/SynologyDrive/02_靜謐花間_0A/02_作品照片區/20250606_台中洲際酒店布置_台中洲際_葛屁君君/JPEG/**)",
+      "PowerShell($base = \"d:\\\\SynologyDrive\\\\02_靜謐花間_0A\\\\00_Serenity_flower_Website\\\\.claude\\\\skills\\\\ui-ux-pro-max\"; New-Item -ItemType Directory -Force -Path $base, \"$base\\\\data\", \"$base\\\\data\\\\stacks\", \"$base\\\\scripts\" | Out-Null; Write-Output \"Created directories\"; Get-ChildItem -Directory $base | Select-Object -ExpandProperty FullName)",
+      "PowerShell($env:PYTHONIOENCODING=\"utf-8\"; python \"d:\\\\SynologyDrive\\\\02_靜謐花間_0A\\\\00_Serenity_flower_Website\\\\.claude\\\\skills\\\\ui-ux-pro-max\\\\scripts\\\\search.py\" \"floral atelier portfolio editorial minimal wedding service\" --design-system -p \"Serenity Flower\" -f markdown)"
+    ],
+    "additionalDirectories": [
+      "D:\\SynologyDrive\\02_靜謐花間_0A\\00_Serenity_flower_Website\\.claude",
+      "d:\\SynologyDrive\\02_靜謐花間_0A\\00_Serenity_flower_Website\\.claude\\skills\\image-manager"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Line weight hierarchy</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  .card { padding: 24px 32px; gap: 18px; justify-content: center; }
+  .eyebrow { font-family: var(--font-body-en); font-size: 10px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--bark); }
+  .rows { display: flex; flex-direction: column; gap: 18px; }
+  .r { display: grid; grid-template-columns: 130px 1fr 110px; gap: 20px; align-items: center; }
+  .r .lbl { font-family: var(--font-body-en); font-size: 12px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink); }
+  .r .specimen { display: flex; align-items: center; height: 18px; }
+  .r .meta { font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: var(--ink-70); text-align: right; }
+  .l-hair { width: 100%; height: 1px; background: var(--ink-70); }
+  .l-rule { width: 100%; height: 2px; background: var(--bark); }
+  .l-frame { width: 100%; height: 4px; background: var(--ink); }
+</style>
+</head>
+<body>
+  <div class="card">
+    <span class="eyebrow">Line weight · hierarchical, not uniform</span>
+    <div class="rows">
+      <div class="r"><span class="lbl">Hairline</span><div class="specimen"><div class="l-hair"></div></div><span class="meta">1 px · ink 70%</span></div>
+      <div class="r"><span class="lbl">Rule</span><div class="specimen"><div class="l-rule"></div></div><span class="meta">2 px · bark</span></div>
+      <div class="r"><span class="lbl">Frame</span><div class="specimen"><div class="l-frame"></div></div><span class="meta">4 px · ink</span></div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,52 @@
+---
+/**
+ * 作品總覽頁（/works · 作品瀏覽）
+ * ─────────────────────────────────────────────────
+ * 顯示所有已發佈作品 + 互動式 tag 篩選 UI（chip 可點選切換）。
+ * 依日期排序、按分組（外型 / 場合 / 時節）顯示篩選 chip。
+ *
+ * 怎麼設定：
+ *   ▸ 改大標題「All works.」→ 改 .works-hero__display
+ *   ▸ 改中文「所有作品。」→ 改 .works-hero__tc
+ *   ▸ 想關掉篩選 UI → 移除下方 <WorkList> 的 interactive 屬性
+ *   ▸ 想限制只顯示前 N 件 → 給 <WorkList interactive limit={20} />
+ *   ▸ 加 / 改 tag 與分組 → 編輯 src/content/tags.json
+ *   ▸ 篩選 chip 樣式 → 改 components/WorkList.astro 的 .sf-tagfilter__chip
+ */
+import SitePage from '../../components/SitePage.astro';
+import EyebrowRule from '../../components/EyebrowRule.astro';
+import WorkList from '../../components/WorkList.astro';
+---
+<SitePage
+  title="Works · 作品集 · SERENITY FLOWER"
+  description="All published works."
+  active="Works"
+>
+  <section class="works-hero">
+    <EyebrowRule en="Works · 作品集" />
+    <h1 class="works-hero__display">All works.</h1>
+    <p class="works-hero__tc">所有作品。</p>
+  </section>
+  <section class="works-grid-wrap">
+    <WorkList interactive emptyMessage="尚未發佈作品。" />
+  </section>
+</SitePage>
+
+<style>
+  .works-hero { padding: var(--s-9) 0 var(--s-7); }
+  .works-hero__display {
+    font-family: var(--font-display-en);
+    font-size: var(--fs-display-2);
+    font-weight: 400;
+    line-height: var(--lh-display);
+    margin: var(--s-4) 0 0;
+  }
+  .works-hero__tc {
+    font-family: var(--font-display-tc);
+    font-size: var(--fs-h2);
+    font-weight: 500;
+    margin: var(--s-2) 0 0;
+    max-width: none;
+  }
+  .works-grid-wrap { padding: var(--s-5) 0 var(--s-10); }
+</style>

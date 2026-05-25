@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Elevation · inset hairline only</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  .card { padding: 24px 32px; gap: 18px; }
+  .eyebrow { font-family: var(--font-body-en); font-size: 10px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--bark); }
+  .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .surface { aspect-ratio: 1 / 0.7; background: var(--white); display: flex; align-items: center; justify-content: center; font-family: var(--font-body-en); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-70); }
+  .s-0 { border: 1px solid var(--ink-10); }
+  .s-1 { box-shadow: inset 0 0 0 1px rgba(137,88,58,0.40); }
+  .s-2 { box-shadow: inset 0 0 0 1px rgba(62,45,33,0.70); }
+  .label { font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: var(--ink-70); margin-top: 6px; text-align: center; }
+  .head { display: flex; gap: 14px; align-items: baseline; }
+  .head .note { font-family: var(--font-body-en); font-size: 11px; color: var(--ink-70); }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="head"><span class="eyebrow">Elevation</span><span class="note">— never via shadow; signal depth with line</span></div>
+    <div class="row">
+      <div><div class="surface s-0">Flat / surface-0</div><div class="label">border · ink 10%</div></div>
+      <div><div class="surface s-1">Raised / surface-1</div><div class="label">inset · bark 40%</div></div>
+      <div><div class="surface s-2">Pinned / surface-2</div><div class="label">inset · ink 70%</div></div>
+    </div>
+  </div>
+</body>
+</html>

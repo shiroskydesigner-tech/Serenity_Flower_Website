@@ -1,0 +1,24 @@
+[
+  { "slug": "bouquet-wedding",  "name": "新娘捧花",   "group": "form",     "description": "新娘捧花" },
+  { "slug": "bouquet-gift",     "name": "花束",       "group": "form",     "description": "一般花束、贈禮花束" },
+  { "slug": "corsage",          "name": "胸花",       "group": "form",     "description": "新郎胸花、賓客胸花" },
+  { "slug": "basket",           "name": "花籃",       "group": "form",     "description": "手提花籃、致贈花籃" },
+  { "slug": "pot",              "name": "盆花",       "group": "form",     "description": "盆花、藝品、告別式盆花" },
+  { "slug": "balloon",          "name": "氣球",       "group": "form",     "description": "單一氣球作品、單束氣球" },
+  { "slug": "structural",       "name": "架構作品",   "group": "form",     "description": "結構性花藝、藝術品級作品" },
+
+  { "slug": "wedding-setup",    "name": "婚禮佈置",   "group": "scene",    "description": "婚禮場地、儀式空間布置" },
+  { "slug": "balloon-installation", "name": "氣球佈置", "group": "scene",  "description": "氣球場地布置、生日派對裝置" },
+  { "slug": "arrangement",      "name": "花藝佈置",   "group": "scene",    "description": "活動、店面、空間花藝" },
+  { "slug": "wedding",          "name": "婚禮",       "group": "scene",    "description": "婚禮相關作品" },
+  { "slug": "funeral",          "name": "告別式",     "group": "scene",    "description": "告別式相關" },
+
+  { "slug": "proposal",         "name": "求婚",       "group": "occasion", "description": "求婚場合花藝、單支玫瑰" },
+  { "slug": "graduation",       "name": "畢業",       "group": "occasion", "description": "畢業花束" },
+  { "slug": "anniversary",      "name": "紀念日",     "group": "occasion", "description": "情侶紀念日、結婚紀念" },
+  { "slug": "valentines",       "name": "情人節",     "group": "occasion", "description": "情人節" },
+  { "slug": "mothers-day",      "name": "母親節",     "group": "occasion", "description": "母親節" },
+  { "slug": "birthday",         "name": "生日",       "group": "occasion", "description": "生日花禮" },
+
+  { "slug": "product",          "name": "花藝商品",   "group": "kind",     "description": "可上架販售的花藝商品(電商品項)" }
+]

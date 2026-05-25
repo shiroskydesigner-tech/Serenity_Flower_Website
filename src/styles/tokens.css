@@ -1,0 +1,146 @@
+/* ============================================================
+   SERENITY FLOWER · 靜謐花間
+   Foundational design tokens（基礎設計變數）
+   ----
+   ▸ 這支檔案是「全站視覺的中央控制台」。
+     改這裡的數值 → 自動影響所有頁面。
+   ▸ 想改顏色 → 看下方「Palette」區塊
+   ▸ 想改字體 → 看下方「Type families」區塊
+   ▸ 想改間距 → 看下方「Spacing」區塊（4px 為基數）
+   ▸ 想改字體大小 → 看下方「Type scale」區塊
+   ▸ 想改動畫速度 → 看下方「Motion」區塊
+   ▸ 想改網格 → 看下方「Grid」區塊
+
+   Source of truth: 00_BrandBook/Serenity Flower Design System/colors_and_type.css
+   ============================================================ */
+
+/* --- Webfonts ----------------------------------------------- */
+/* Bell (Bell MT) — brand display face. TTFs in public/fonts/.
+   Swap by replacing the .TTF files at the same path. */
+@font-face {
+  font-family: "Bell";
+  src: url("/fonts/BELL.TTF") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Bell";
+  src: url("/fonts/BELLB.TTF") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Bell";
+  src: url("/fonts/BELLI.TTF") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Body sans + CJK — Google Fonts. */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+
+:root {
+  /* ── Palette — 4 earth tones, used in strict hierarchy ───── */
+  /* 全站只用 4 個顏色。改色就改這 4 個 hex 值，其他全部會跟著變。
+     ─────────────────────────────────────────────
+     --ink    主要文字、細線、按鈕底色（品牌的「黑」）
+     --bark   強調色（服務編號、底線、結構性裝飾）
+     --linen  主要背景色（頁面底色）
+     --white  次要背景色（卡片、內嵌區塊）
+     ───────────────────────────────────────────── */
+  --ink:    #3E2D21;   /* PANTONE 412 C  · 主要文字、細線、品牌的「黑」 */
+  --bark:   #89583A;   /* PANTONE 7517 C · 強調色（服務編號、結構性裝飾線）*/
+  --linen:  #D8BE99;   /* PANTONE 466 C  · ★ 主背景（頁面底色） */
+  --white:  #EEE5D6;   /* 衍生色          · ☆ 次背景（米白，卡片、內嵌區塊）*/
+  --paper:  var(--white);
+  --brand:  var(--linen);
+
+  /* Tonal overlays (hairlines, dimmed rules) */
+  --ink-70: rgba(62, 45, 33, 0.70);
+  --ink-40: rgba(62, 45, 33, 0.40);
+  --ink-20: rgba(62, 45, 33, 0.20);
+  --ink-10: rgba(62, 45, 33, 0.10);
+  --bark-60: rgba(137, 88, 58, 0.60);
+  --bark-40: rgba(137, 88, 58, 0.40);
+
+  /* ── Type families（字體家族）─────────────────────────────
+     display = 標題/大字  body = 內文/小字
+     en = 英文   tc = 繁體中文
+     換字體就改這 4 行；首字串會優先使用，找不到時 fallback。 */
+  --font-display-en: "Bell", "Cormorant Garamond", "Times New Roman", serif;
+  --font-body-en:    "Manrope", "Noto Sans TC", -apple-system, system-ui, sans-serif;
+  --font-display-tc: "Noto Serif TC", "Bell", serif;
+  --font-body-tc:    "Noto Sans TC", "Manrope", sans-serif;
+
+  /* ── Type scale（字級階梯）──────────────────────────────── */
+  --fs-display-1: 96px;
+  --fs-display-2: 72px;
+  --fs-h1:        56px;
+  --fs-h2:        40px;
+  --fs-h3:        28px;
+  --fs-h4:        20px;
+  --fs-body:      16px;
+  --fs-small:     13px;
+  --fs-caption:   11px;
+
+  --lh-display:   1.04;
+  --lh-heading:   1.18;
+  --lh-body:      1.65;
+  --lh-tc-body:   1.85;
+
+  --tr-display:   -0.02em;
+  --tr-heading:   -0.01em;
+  --tr-body:      0;
+  --tr-caps:      0.28em;
+  --tr-caps-tight: 0.14em;
+
+  --w-regular:  400;
+  --w-medium:   500;
+  --w-semibold: 600;
+  --w-bold:     700;
+
+  /* ── Spacing — 4px base（間距，以 4px 為基數） ─────────────
+     程式碼中用 var(--s-5) 等寫法呼叫；數字越大間距越大。
+     編輯這裡可一次性調整全站留白比例。 */
+  --s-1:   4px;
+  --s-2:   8px;
+  --s-3:   12px;
+  --s-4:   16px;
+  --s-5:   24px;
+  --s-6:   32px;
+  --s-7:   48px;
+  --s-8:   64px;
+  --s-9:   96px;
+  --s-10: 128px;
+
+  /* ── Grid — 8 cols × 80px + 96px skeleton (signature) ────── */
+  --grid-cols: 8;
+  --grid-col-w: 80px;
+  --grid-gutter: 32px;
+  --grid-margin: 96px;
+  --content-max: 540px;
+  --skeleton-col: 96px;       /* the reserved empty right column */
+
+  /* ── Radii — kept severe ─────────────────────────────────── */
+  --r-none: 0;
+  --r-hair: 2px;              /* ABSOLUTE MAX on UI */
+
+  /* ── Lines — hierarchical weight is brand signature ──────── */
+  --line-hair:  1px;
+  --line-rule:  2px;
+  --line-frame: 4px;
+
+  /* ── Elevation — inset hairline, never shadow ────────────── */
+  --elev-inset: inset 0 0 0 1px var(--bark-40);
+
+  /* ── Motion — slow, stately（動畫速度，刻意緩慢以呼應品牌氣質）──
+     hover/transition 使用；想加快/減慢所有動畫只需改這幾行。
+     注意：hover scale 已硬編 0.2s ease，調這裡不會影響。 */
+  --ease-stately: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast:     320ms;
+  --dur-base:     480ms;
+  --dur-slow:     720ms;
+}

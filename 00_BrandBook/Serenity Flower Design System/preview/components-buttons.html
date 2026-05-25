@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Components · buttons</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  .card { padding: 26px 32px; gap: 18px; }
+  .eyebrow { font-family: var(--font-body-en); font-size: 10px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--bark); }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px 24px; align-items: end; }
+  .col { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+  .col .name { font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: var(--ink-70); }
+  .btn { font-family: var(--font-body-en); font-size: 12px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; padding: 13px 24px; border: 1px solid var(--ink); background: transparent; color: var(--ink); cursor: pointer; border-radius: 0; }
+  .btn--primary { background: var(--ink); color: var(--paper); }
+  .btn--hover { background: var(--ink); color: var(--paper); }
+  .btn--primary-hover { background: var(--bark); color: var(--paper); border-color: var(--bark); }
+  .btn--cream { background: #EEE5D6; color: var(--ink); border-color: var(--ink); }
+  .btn--cream-hover { background: var(--ink); color: #EEE5D6; border-color: var(--ink); }
+  .btn--ghost { border-color: var(--ink-20); color: var(--ink); padding-left: 0; padding-right: 0; border-left: 0; border-right: 0; border-top: 0; border-bottom: 1px solid var(--ink); }
+  .arrow { display: inline-block; margin-left: 10px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <span class="eyebrow">Buttons</span>
+    <div class="grid">
+      <div class="col"><button class="btn">Enquire<span class="arrow">→</span></button><span class="name">secondary · default</span></div>
+      <div class="col"><button class="btn btn--hover">Enquire<span class="arrow">→</span></button><span class="name">secondary · hover</span></div>
+      <div class="col"><button class="btn btn--primary">Reserve a date</button><span class="name">primary · default</span></div>
+      <div class="col"><button class="btn btn--primary-hover">Reserve a date</button><span class="name">primary · hover (bark)</span></div>
+      <div class="col"><button class="btn btn--cream">View the brief</button><span class="name">cream · default</span></div>
+      <div class="col"><button class="btn btn--cream-hover">View the brief</button><span class="name">cream · hover (inverts)</span></div>
+      <div class="col" style="grid-column: 1 / -1"><button class="btn btn--ghost">View the atelier</button><span class="name">ghost · underline</span></div>
+    </div>
+  </div>
+</body>
+</html>

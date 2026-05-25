@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Type · scale</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  .card { padding: 20px 32px; gap: 6px; }
+  .head { display: flex; gap: 14px; align-items: baseline; margin-bottom: 4px; }
+  .eyebrow { font-family: var(--font-body-en); font-size: 10px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--bark); }
+  .stack { font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: var(--ink-70); }
+  .row { display: grid; grid-template-columns: 60px 1fr 90px; gap: 16px; align-items: baseline; padding: 4px 0; border-bottom: 1px solid var(--ink-10); }
+  .row:last-child { border-bottom: 0; }
+  .tag { font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: var(--bark); }
+  .sample { font-family: var(--font-display-en); color: var(--ink); line-height: 1; font-weight: 400; }
+  .meta { font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: var(--ink-70); text-align: right; }
+  .body { font-family: var(--font-body-en); }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="head"><span class="eyebrow">Type scale</span><span class="stack">Display in Bell · Body in Manrope</span></div>
+    <div class="row"><span class="tag">disp-1</span><span class="sample" style="font-size:48px; font-weight:400">Stillness</span><span class="meta">96 / 1.04</span></div>
+    <div class="row"><span class="tag">h1</span><span class="sample" style="font-size:32px">Serenity</span><span class="meta">56 / 1.18</span></div>
+    <div class="row"><span class="tag">h2</span><span class="sample" style="font-size:24px">Installation</span><span class="meta">40 / 1.18</span></div>
+    <div class="row"><span class="tag">h3</span><span class="sample" style="font-size:18px">Atelier</span><span class="meta">28 / 1.18</span></div>
+    <div class="row"><span class="tag">h4</span><span class="body" style="font-size:13px; font-weight:500; letter-spacing:0.14em; text-transform:uppercase">SERVICES</span><span class="meta">20 / 1.4</span></div>
+    <div class="row"><span class="tag">body</span><span class="body" style="font-size:14px">Body copy at 16px / 1.65</span><span class="meta">16 / 1.65</span></div>
+    <div class="row"><span class="tag">caption</span><span class="body" style="font-size:11px; color:var(--ink-70)">Caption · 11px tracked +0.18em</span><span class="meta">11 / 1.5</span></div>
+  </div>
+</body>
+</html>

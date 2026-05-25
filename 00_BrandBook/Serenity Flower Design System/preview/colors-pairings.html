@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Colors · pairings</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  .card { padding: 22px 28px; gap: 14px; }
+  .pairs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .pair { aspect-ratio: 1 / 0.95; display: flex; align-items: center; justify-content: center; border: 1px solid var(--ink-10); position: relative; }
+  .pair .tag { position: absolute; bottom: 6px; left: 8px; font-family: ui-monospace, Menlo, monospace; font-size: 9px; letter-spacing: 0.06em; }
+  .pair .name { font-family: var(--font-display-en); font-size: 24px; font-weight: 400; letter-spacing: 0.14em; }
+  .head .eyebrow { font-family: var(--font-body-en); font-size: 10px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--bark); }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="head"><span class="eyebrow">Approved pairings · text-on-surface</span></div>
+    <div class="pairs">
+      <div class="pair" style="background:#EEE5D6"><span class="name" style="color:#3E2D21">Aa 花</span><span class="tag" style="color:#3E2D21">ink/cream</span></div>
+      <div class="pair" style="background:#D8BE99"><span class="name" style="color:#3E2D21">Aa 花</span><span class="tag" style="color:#3E2D21">ink/linen</span></div>
+      <div class="pair" style="background:#3E2D21"><span class="name" style="color:#EEE5D6">Aa 花</span><span class="tag" style="color:#EEE5D6">cream/ink</span></div>
+      <div class="pair" style="background:#89583A"><span class="name" style="color:#EEE5D6">Aa 花</span><span class="tag" style="color:#EEE5D6">cream/bark</span></div>
+    </div>
+  </div>
+</body>
+</html>

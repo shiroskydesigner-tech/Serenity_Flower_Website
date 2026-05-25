@@ -1,0 +1,34 @@
+---
+/**
+ * 裝置藝術服務頁（/installation）
+ * ─────────────────────────────────────────────────
+ * 結構：ServiceHero（標題與介紹）+ WorkList（依 tag 過濾的作品）
+ *
+ * 怎麼設定：
+ *   ▸ 改服務介紹（中英雙語）→ 改下方 <ServiceHero> 的 lead 與 leadTc props
+ *   ▸ 改服務編號（顯示為 Service · 01）→ 改 num="01"
+ *   ▸ 改要顯示哪些作品 → 改下方 filterTags 陣列
+ *     目前顯示有 arrangement / structural / pot / funeral 任一 tag 的作品
+ *   ▸ 改空狀態提示文字 → 改 emptyMessage
+ */
+import SitePage from '../../components/SitePage.astro';
+import ServiceHero from '../../components/ServiceHero.astro';
+import WorkList from '../../components/WorkList.astro';
+---
+<SitePage
+  title="Installation Art · 裝置藝術 · SERENITY FLOWER"
+  description="Sculptural floral objects and spatial interventions — the visual anchor of a venue."
+  active="Installation"
+>
+  <ServiceHero
+    num="01"
+    en="Installation Art"
+    tc="裝置藝術"
+    lead="Sculptural objects and spatial interventions. We treat plant material as a geometric, structural medium — the visual anchor of a venue, not its decoration."
+    leadTc="雕塑性的花藝物件與空間裝置。我們把植物視為幾何與結構的媒材，作為空間的視覺定錨，而非妝點。"
+  />
+  <WorkList
+    filterTags={["arrangement", "structural", "pot", "funeral"]}
+    emptyMessage="尚未發佈裝置藝術作品。"
+  />
+</SitePage>

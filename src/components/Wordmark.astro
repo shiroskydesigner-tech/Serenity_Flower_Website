@@ -1,0 +1,54 @@
+---
+/**
+ * Wordmark（品牌 LOGO）
+ * ─────────────────────────────────────────────────
+ * 用途：顯示 SERENITY FLOWER 的 SVG logo。可點擊回首頁。
+ *
+ * 使用範例：
+ *   <Wordmark size={110} />              ← 一般用法
+ *   <Wordmark compact />                  ← admin 用小型 wordmark
+ *
+ * 怎麼設定：
+ *   ▸ 改 LOGO 大小（單檔）→ 傳 size prop，例如 size={120}
+ *   ▸ 改全站預設大小 → 改下方 size = 96 的數字
+ *   ▸ 換 LOGO 圖檔 → 替換 /public/logo/Logo_web-06.svg
+ *   ▸ 改 hover 縮放幅度 → 改下方 .sf-wordmark:hover img { scale: 1.04 }
+ *   ▸ 關閉 hover 效果 → 移除 .sf-wordmark:hover img { ... } 整塊
+ */
+interface Props {
+  compact?: boolean;                      // true = 用小型 wordmark（admin 用）
+  /** LOGO 高度（px），寬度自動等比。預設 96（原始 64 的 1.5 倍）。 */
+  size?: number;
+  /** 無障礙 alt 文字，預設用品牌名。 */
+  alt?: string;
+}
+const {
+  compact = false,
+  size = 96,
+  alt = 'SERENITY FLOWER · 靜謐花間',
+} = Astro.props;
+const src = compact ? '/logo/wordmark-compact.svg' : '/logo/Logo_web-06.svg';
+---
+<a href="/" class="sf-wordmark" aria-label={alt}>
+  <img src={src} alt={alt} style={`height:${size}px`} />
+</a>
+
+<style>
+  .sf-wordmark {
+    display: inline-block;
+    line-height: 0;
+    background-image: none;  /* override the global a underline-reveal */
+  }
+  .sf-wordmark img {
+    height: 96px;
+    width: auto;
+    display: block;
+    scale: 1;
+    transform-origin: left center;
+    transition: scale 0.2s ease, filter 0.2s ease;
+  }
+  .sf-wordmark:hover img {
+    scale: 1.04;
+    filter: contrast(1.06);
+  }
+</style>

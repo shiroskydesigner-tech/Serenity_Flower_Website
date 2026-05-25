@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Serenity Flower tulip mark">
+  
+  <g fill="none" stroke="#3E2D21" stroke-linecap="round" stroke-linejoin="round">
+
+    
+    <path d="M 78 30&#xA;             C 60 38, 50 62, 58 92&#xA;             C 64 102, 76 108, 88 102" stroke-width="3"></path>
+    <path d="M 78 30&#xA;             C 90 34, 100 52, 102 80" stroke-width="3"></path>
+
+    
+    <path d="M 138 28&#xA;             C 108 30, 84 60, 86 108&#xA;             C 88 138, 108 154, 124 152&#xA;             C 152 146, 168 112, 168 78&#xA;             C 166 48, 156 28, 138 28 Z" fill="#3E2D21" stroke-width="0"></path>
+
+    
+    <path d="M 116 52 C 102 92, 104 128, 118 148" stroke="#EEE5D6" stroke-width="2.5"></path>
+
+    
+    <path d="M 118 152 L 116 178" stroke-width="5"></path>
+
+    
+    <path d="M 130 162&#xA;             L 154 184&#xA;             L 130 174 Z" fill="#3E2D21" stroke-width="0"></path>
+  </g>
+</svg>

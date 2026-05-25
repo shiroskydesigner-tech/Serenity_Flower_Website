@@ -1,0 +1,43 @@
+/* Shared base for preview cards. Each card imports colors_and_type.css from the parent
+   folder, then layers on this thin card-specific scaffolding. */
+@import url("../colors_and_type.css");
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #D8BE99;  /* ★ main brand color — applied to every preview card by default */
+  font-family: var(--font-body-en);
+  color: var(--ink);
+}
+
+.card {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100%;
+  padding: 28px 32px;
+  background: #D8BE99;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card--paper { background: var(--paper); }
+.card--white { background: var(--white); }
+.card--ink { background: var(--ink); color: var(--paper); }
+
+.row { display: flex; align-items: center; gap: 16px; }
+.col { display: flex; flex-direction: column; gap: 8px; }
+
+.label-cap {
+  font-family: var(--font-body-en);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--bark);
+}
+.label-mono {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  color: var(--ink-70);
+}

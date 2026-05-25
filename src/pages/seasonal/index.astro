@@ -1,0 +1,33 @@
+---
+/**
+ * 節慶花禮服務頁（/seasonal）
+ * ─────────────────────────────────────────────────
+ * 結構：ServiceHero + WorkList
+ *
+ * 怎麼設定：
+ *   ▸ 改服務介紹文字 → 改下方 <ServiceHero> 的 lead / leadTc
+ *   ▸ 改顯示作品條件 → 改 filterTags
+ *     目前涵蓋 bouquet-gift / graduation / anniversary / valentines / mothers-day / birthday / basket
+ *   ▸ 改空狀態提示 → emptyMessage
+ */
+import SitePage from '../../components/SitePage.astro';
+import ServiceHero from '../../components/ServiceHero.astro';
+import WorkList from '../../components/WorkList.astro';
+---
+<SitePage
+  title="Seasonal Florals · 節慶花禮 · SERENITY FLOWER"
+  description="Object-scale gift work — the line and silhouette of a single stem treated as composition."
+  active="Florals"
+>
+  <ServiceHero
+    num="03"
+    en="Seasonal Florals"
+    tc="節慶花禮"
+    lead="Object-scale gift work. A single stem's line and silhouette treated as composition — bouquets, corsages, and seasonal pieces for those who want quiet over abundance."
+    leadTc="物件尺度的花禮。一束花、一枚胸花、一只季節花籃，皆以單一枝幹的線條與輪廓為構圖。給選擇靜謐而非繁盛的人。"
+  />
+  <WorkList
+    filterTags={["bouquet-gift", "graduation", "anniversary", "valentines", "mothers-day", "birthday", "basket"]}
+    emptyMessage="尚未發佈節慶花禮作品。"
+  />
+</SitePage>

@@ -1,0 +1,10 @@
+node_modules
+dist
+.astro
+.env
+.env.local
+*.log
+
+# Local-only working folders (never commit)
+public/_contact_sheets/
+Ref_Photo/

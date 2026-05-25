@@ -1,0 +1,126 @@
+---
+/**
+ * Atelier 工作室介紹頁（/atelier）
+ * ─────────────────────────────────────────────────
+ * 區塊組成：Hero 標題 → What we do 雙語介紹 → What we refuse 拒絕宣言
+ *
+ * 怎麼設定：
+ *   ▸ 改大標題「A studio, not a shop.」→ 改 .atelier-hero__display 內的文字
+ *   ▸ 改中文標題「一間工作室，不是花店。」→ 改 .atelier-hero__tc
+ *   ▸ 改「What we do」段落 → 改 .atelier-statement 內的兩欄 <p>
+ *   ▸ 加/減「拒絕」項目 → 改 .atelier-refusal__list 內的 <span> 區塊
+ *   ▸ 拒絕項目左側 bark 縱線 → .atelier-refusal__list span { border-left }
+ */
+import SitePage from '../../components/SitePage.astro';
+import EyebrowRule from '../../components/EyebrowRule.astro';
+---
+<SitePage
+  title="Atelier · 工作室 · SERENITY FLOWER"
+  description="An atelier of installation art, wedding design, and seasonal florals from Taipei."
+  active="Atelier"
+>
+  <section class="atelier-hero">
+    <EyebrowRule en="Atelier · 工作室" />
+    <h1 class="atelier-hero__display">A studio, not a shop.</h1>
+    <p class="atelier-hero__tc">一間工作室，不是花店。</p>
+  </section>
+
+  <section class="atelier-statement">
+    <div class="atelier-statement__col">
+      <h2>What we do</h2>
+      <p>SERENITY FLOWER operates at the intersection of <em>floristry</em>, <em>installation art</em>, and <em>architectural space-making</em>. We treat plant material as a structural medium, not as decorative filler.</p>
+      <p>Three integrated tracks — installation, wedding design, seasonal florals — each composed with the same vocabulary: volume, skeleton, circulation, void.</p>
+    </div>
+    <div class="atelier-statement__col">
+      <h2>我們做什麼</h2>
+      <p>靜謐花間，是一個橫跨花藝、裝置藝術、與空間建構的工作室。我們把植物當作結構媒材，而非裝飾的填充。</p>
+      <p>三條交織的服務線——裝置藝術、婚禮佈置、節慶花禮——共用同一套語彙：量體、骨架、動線、留白。</p>
+    </div>
+  </section>
+
+  <section class="atelier-refusal">
+    <EyebrowRule en="What we refuse" tc="我們拒絕" />
+    <p class="atelier-refusal__list">
+      <span>The maximalist floral abundance of the wedding industry default. ／<br/>婚禮產業預設的繁複堆疊。</span>
+      <span>The generic line-drawn florals and scripted wordmarks of the “boutique florist” default. ／<br/>「精品花店」常見的細線插畫與草寫字標。</span>
+      <span>Ornament for ornament's sake. ／<br/>為裝飾而裝飾。</span>
+    </p>
+  </section>
+</SitePage>
+
+<style>
+  .atelier-hero { padding: var(--s-9) 0 var(--s-7); }
+  .atelier-hero__display {
+    font-family: var(--font-display-en);
+    font-size: var(--fs-display-2);
+    font-weight: 400;
+    line-height: var(--lh-display);
+    letter-spacing: var(--tr-display);
+    margin: var(--s-4) 0 0;
+  }
+  .atelier-hero__tc {
+    font-family: var(--font-display-tc);
+    font-size: var(--fs-h2);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    margin: var(--s-2) 0 0;
+    max-width: none;
+  }
+  .atelier-statement {
+    padding: var(--s-9) 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--s-8);
+    border-top: 1px solid var(--ink-10);
+  }
+  .atelier-statement h2 {
+    font-family: var(--font-display-en);
+    font-size: var(--fs-h3);
+    margin-bottom: var(--s-4);
+    color: var(--bark);
+  }
+  .atelier-statement em { font-style: italic; color: var(--ink); }
+  .atelier-statement__col p { font-size: 16px; line-height: 1.75; color: var(--ink); max-width: none; }
+  .atelier-statement__col:last-child p { font-family: var(--font-body-tc); line-height: var(--lh-tc-body); }
+
+  .atelier-refusal { padding: var(--s-9) 0 var(--s-10); border-top: 1px solid var(--ink-10); }
+  .atelier-refusal__list {
+    margin-top: var(--s-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-5);
+    font-family: var(--font-body-en);
+    font-size: var(--fs-h4);
+    line-height: 1.7;
+    color: var(--ink);
+    max-width: 760px;
+  }
+  .atelier-refusal__list span {
+    padding-left: var(--s-5);
+    border-left: 2px solid var(--bark);
+  }
+  /* Tablet ≤ 960：雙語介紹改單欄 */
+  @media (max-width: 960px) {
+    .atelier-hero { padding: var(--s-8) 0 var(--s-6); }
+    .atelier-hero__display { font-size: 56px; }
+    .atelier-hero__tc { font-size: 28px; }
+    .atelier-statement {
+      padding: var(--s-8) 0;
+      grid-template-columns: 1fr;
+      gap: var(--s-6);
+    }
+    .atelier-refusal { padding: var(--s-8) 0 var(--s-9); }
+    .atelier-refusal__list { font-size: 18px; }
+  }
+  /* Mobile ≤ 640 */
+  @media (max-width: 640px) {
+    .atelier-hero { padding: var(--s-7) 0 var(--s-5); }
+    .atelier-hero__display { font-size: 42px; line-height: 1.06; }
+    .atelier-hero__tc { font-size: 24px; }
+    .atelier-statement { padding: var(--s-7) 0; gap: var(--s-5); }
+    .atelier-statement h2 { font-size: 22px; }
+    .atelier-statement__col p { font-size: 15px; line-height: 1.75; }
+    .atelier-refusal__list { font-size: 16px; gap: var(--s-4); }
+    .atelier-refusal__list span { padding-left: var(--s-4); }
+  }
+</style>

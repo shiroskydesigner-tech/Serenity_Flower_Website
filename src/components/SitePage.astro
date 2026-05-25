@@ -1,0 +1,90 @@
+---
+/**
+ * SitePage（一般公開頁面的標準外殼）
+ * ─────────────────────────────────────────────────
+ * 用途：自動套用品牌 Header + Footer + 8 欄網格容器 + 右側 96px 留白骨架。
+ *       這是「絕大多數頁面」應使用的最上層 wrapper。
+ *
+ * 使用範例：
+ *   <SitePage title="頁面標題" active="Wedding">
+ *     <YourContent />
+ *   </SitePage>
+ *
+ * 何時用：
+ *   ▸ 行銷頁、服務頁、作品列表、atelier 介紹 → 用 SitePage（本元件）
+ *   ▸ admin 後台 / 純淨頁 → 改用 BaseLayout variant="bare"
+ *
+ * 怎麼設定：
+ *   ▸ 改頁面最大寬度 → 下方 .sf-page { max-width: 1440px }
+ *   ▸ 改頁面左右邊距 → 下方 .sf-page { padding: 0 var(--s-9) }
+ *   ▸ 改右側 96px 骨架欄寬 → 改 tokens.css 的 --skeleton-col
+ *   ▸ 行動裝置（≤960px）邊距 → 看 @media 區塊
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from './Header.astro';
+import Footer from './Footer.astro';
+
+interface Props {
+  title: string;              // 分頁標題（必填）
+  description?: string;       // SEO 描述
+  /** 高亮 Header 對應導覽（例如 'Installation'、'Wedding'）。 */
+  active?: string;
+}
+const { title, description, active } = Astro.props;
+---
+<BaseLayout title={title} description={description}>
+  <a href="#main" class="sf-skip">跳至主要內容 · Skip to content</a>
+  <div class="sf-page">
+    <Header active={active} />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <Footer />
+  </div>
+</BaseLayout>
+
+<style>
+  /* Skip link — 平時藏在視窗外，鍵盤 Tab 第一站才出現
+     a11y 標準必備：讓鍵盤/讀屏用戶能跳過 nav 直達內容 */
+  .sf-skip {
+    position: absolute;
+    left: var(--s-4);
+    top: var(--s-4);
+    z-index: 300;
+    background: var(--ink);
+    color: var(--white);
+    padding: 12px 20px;
+    font-family: var(--font-body-en);
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background-image: none;
+    transform: translateY(-200%);
+    transition: transform 0.2s ease;
+  }
+  .sf-skip:focus { transform: translateY(0); }
+
+  .sf-page {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 var(--s-9);
+    padding-right: calc(var(--s-9) + var(--skeleton-col));
+  }
+  main { display: block; }
+  main:focus { outline: none; }     /* tabindex=-1 是程式聚焦目標，不需要 ring */
+
+  /* Tablet ≤ 960：取消右側骨架欄、收緊左右邊距 */
+  @media (max-width: 960px) {
+    .sf-page {
+      padding: 0 var(--s-6);
+      padding-right: var(--s-6);
+    }
+  }
+  /* Mobile ≤ 640：再收一階，貼齊內容 */
+  @media (max-width: 640px) {
+    .sf-page {
+      padding: 0 var(--s-5);
+      padding-right: var(--s-5);
+    }
+  }
+</style>

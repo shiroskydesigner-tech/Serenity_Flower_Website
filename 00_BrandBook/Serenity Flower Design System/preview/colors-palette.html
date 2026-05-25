@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Colors · primary palette</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  .card { padding: 26px 32px; gap: 14px; }
+  .swatches { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .sw { display: flex; flex-direction: column; gap: 10px; }
+  .chip { aspect-ratio: 1 / 1.05; border: 1px solid var(--ink-10); }
+  .name { font-family: var(--font-display-en); font-size: 18px; font-weight: 400; line-height: 1; color: var(--ink); }
+  .hex { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 10px; color: var(--ink-70); letter-spacing: 0.04em; }
+  .pms { font-family: var(--font-body-en); font-size: 9px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--bark); }
+  .head { display: flex; align-items: baseline; justify-content: space-between; }
+  .head .eyebrow { font-family: var(--font-body-en); font-size: 10px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--bark); }
+  .head .note { font-family: var(--font-body-en); font-size: 11px; color: var(--ink-70); }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="head">
+      <span class="eyebrow">Palette · Pantone-matched</span>
+      <span class="note">From source brief — preserved exactly</span>
+    </div>
+    <div class="swatches">
+      <div class="sw"><div class="chip" style="background:#3E2D21"></div><span class="name">Ink</span><span class="hex">#3E2D21</span><span class="pms">PMS 412 C</span></div>
+      <div class="sw"><div class="chip" style="background:#89583A"></div><span class="name">Bark</span><span class="hex">#89583A</span><span class="pms">PMS 7517 C</span></div>
+      <div class="sw"><div class="chip" style="background:#D8BE99"></div><span class="name">Linen ★</span><span class="hex">#D8BE99</span><span class="pms">PMS 466 C · MAIN</span></div>
+      <div class="sw"><div class="chip" style="background:#EEE5D6; border-color: var(--ink-20)"></div><span class="name">Cream ☆</span><span class="hex">#EEE5D6</span><span class="pms">DERIVED · 2ND</span></div>
+    </div>
+  </div>
+</body>
+</html>

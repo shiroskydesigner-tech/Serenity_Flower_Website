@@ -1,0 +1,94 @@
+---
+/**
+ * Footer（頁尾：品牌標識 + 次要導覽 + 版權）
+ * ─────────────────────────────────────────────────
+ * 顯示位置：每一頁最下方
+ *
+ * 怎麼設定：
+ *   ▸ 改 LOGO 大小 → 改下方 <Wordmark size={144} /> 的數字
+ *   ▸ 改 tagline（品牌標語）→ 改 .sf-footer__tagline 內的文字
+ *   ▸ 加/減頁尾導覽連結 → 改 .sf-footer__nav 內 <a> 標籤
+ *   ▸ 改「Atelier · Est. 2019 · Taipei」→ 改 .sf-footer__colophon 內第一行
+ *   ▸ 改版權格式 → 改 .sf-footer__colophon 內第二行（年份自動）
+ *   ▸ 改頁尾與上方內容的距離 → 改 .sf-footer { margin-top: var(--s-10) }
+ */
+import Wordmark from './Wordmark.astro';
+const year = new Date().getFullYear();   // 自動取得當前年份
+---
+<footer class="sf-footer">
+  <div class="sf-footer__grid">
+    <div class="sf-footer__brand">
+      <Wordmark size={144} />
+      <p class="sf-footer__tagline">Stillness, restructured. · 靜謐，重構。</p>
+    </div>
+    <nav class="sf-footer__nav" aria-label="Secondary">
+      <a href="/atelier">Atelier · 工作室</a>
+      <a href="/installation">Installation · 裝置藝術</a>
+      <a href="/wedding">Wedding · 婚禮佈置</a>
+      <a href="/seasonal">Seasonal · 節慶花禮</a>
+      <a href="/works">Works · 作品集</a>
+      <a href="/enquiry">Contact · 預約</a>
+    </nav>
+    <div class="sf-footer__colophon">
+      <p>Atelier · Est. 2019 · Taipei</p>
+      <p>© {year} SERENITY FLOWER. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .sf-footer {
+    margin-top: var(--s-10);
+    padding: var(--s-9) 0 var(--s-8);
+    border-top: 1px solid var(--ink-10);
+  }
+  .sf-footer__grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1.5fr 1fr;
+    gap: var(--s-7);
+    align-items: start;
+  }
+  /* Footer 上 LOGO 在手機端要縮小，避免占滿整個寬度 */
+  .sf-footer__brand :global(.sf-wordmark img) { transition: height 0.2s ease; }
+  .sf-footer__tagline {
+    margin-top: var(--s-4);
+    font-family: var(--font-display-en);
+    font-style: italic;
+    font-size: 18px;
+    color: var(--ink-70);
+  }
+  .sf-footer__nav {
+    display: flex; flex-direction: column; gap: var(--s-2);
+  }
+  .sf-footer__nav a {
+    font-family: var(--font-body-en);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    color: var(--ink-70);
+  }
+  .sf-footer__colophon p {
+    font-family: var(--font-body-en);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-70);          /* ink-40→ink-70：WCAG AA 對比達 4.5:1 */
+    margin: 0 0 var(--s-2);
+  }
+  /* Tablet ≤ 960：縮為 2 欄（品牌一欄、導覽+版權合併） */
+  @media (max-width: 960px) {
+    .sf-footer { padding: var(--s-8) 0 var(--s-7); }
+    .sf-footer__grid {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s-6);
+    }
+    .sf-footer__brand { grid-column: 1 / -1; }
+    .sf-footer__brand :global(.sf-wordmark img) { height: 96px !important; }
+  }
+  /* Mobile ≤ 640：全部單欄堆疊 */
+  @media (max-width: 640px) {
+    .sf-footer { padding: var(--s-7) 0 var(--s-6); margin-top: var(--s-9); }
+    .sf-footer__grid { grid-template-columns: 1fr; gap: var(--s-5); }
+    .sf-footer__brand :global(.sf-wordmark img) { height: 72px !important; }
+    .sf-footer__tagline { font-size: 16px; }
+  }
+</style>

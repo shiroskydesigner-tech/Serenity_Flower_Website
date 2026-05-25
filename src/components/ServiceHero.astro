@@ -1,0 +1,106 @@
+---
+/**
+ * ServiceHero（服務頁面的大標題區）
+ * ─────────────────────────────────────────────────
+ * 用途：3 個服務頁（裝置藝術 / 婚禮 / 節慶花禮）共用的 hero 區塊。
+ *       顯示「Service · 編號」+ 英文大標題 + 中文 + 雙語 lead 段落。
+ *
+ * 使用範例：
+ *   <ServiceHero
+ *     num="02"
+ *     en="Wedding Design"
+ *     tc="婚禮佈置"
+ *     lead="Architectural choreography of an event space..."
+ *     leadTc="建築式的空間編排..."
+ *   />
+ *
+ * 怎麼設定：
+ *   ▸ 改英文標題大小 → 下方 .service-hero__display { font-size: var(--fs-display-2) }
+ *   ▸ 改中文標題大小 → 下方 .service-hero__tc { font-size: var(--fs-h2) }
+ *   ▸ 改雙語段落欄位排版 → 下方 .service-hero__lead-grid（預設左右並列）
+ *   ▸ 改章節上下留白 → 下方 .service-hero { padding: var(--s-9) 0 var(--s-8) }
+ *   ▸ 行動裝置（≤760px）字級縮小 → 看 @media 區塊
+ */
+import EyebrowRule from './EyebrowRule.astro';
+
+interface Props {
+  num: string;                // 服務編號（顯示為 "Service · 01"）
+  en: string;                 // 英文標題
+  tc: string;                 // 中文標題
+  /** 英文 lead 段落（1-3 句）。 */
+  lead: string;
+  /** 中文 lead 段落（可選，與英文並列顯示）。 */
+  leadTc?: string;
+}
+const { num, en, tc, lead, leadTc } = Astro.props;
+---
+<section class="service-hero">
+  <EyebrowRule en={`Service · ${num}`} />
+  <h1 class="service-hero__display">{en}</h1>
+  <p class="service-hero__tc">{tc}</p>
+  <div class="service-hero__lead-grid">
+    <p class="service-hero__lead">{lead}</p>
+    {leadTc && <p class="service-hero__lead-tc">{leadTc}</p>}
+  </div>
+</section>
+
+<style>
+  .service-hero { padding: var(--s-9) 0 var(--s-8); }
+  .service-hero__display {
+    font-family: var(--font-display-en);
+    font-size: var(--fs-display-2);
+    font-weight: 400;
+    line-height: var(--lh-display);
+    letter-spacing: var(--tr-display);
+    margin: var(--s-4) 0 0;
+  }
+  .service-hero__tc {
+    font-family: var(--font-display-tc);
+    font-size: var(--fs-h2);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    margin: var(--s-2) 0 0;
+    max-width: none;
+  }
+  .service-hero__lead-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--s-7);
+    margin-top: var(--s-7);
+  }
+  .service-hero__lead {
+    font-family: var(--font-body-en);
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--ink-70);
+    margin: 0;
+    max-width: none;
+  }
+  .service-hero__lead-tc {
+    font-family: var(--font-body-tc);
+    font-size: 16px;
+    line-height: var(--lh-tc-body);
+    color: var(--ink);
+    margin: 0;
+    max-width: none;
+  }
+  /* Tablet ≤ 960：雙語段落改單欄、字級降一階 */
+  @media (max-width: 960px) {
+    .service-hero { padding: var(--s-8) 0 var(--s-7); }
+    .service-hero__display { font-size: 56px; }
+    .service-hero__tc { font-size: 32px; }
+    .service-hero__lead-grid {
+      grid-template-columns: 1fr;
+      gap: var(--s-5);
+      margin-top: var(--s-6);
+    }
+  }
+  /* Mobile ≤ 640：再縮一階 */
+  @media (max-width: 640px) {
+    .service-hero { padding: var(--s-7) 0 var(--s-6); }
+    .service-hero__display { font-size: 44px; line-height: 1.05; }
+    .service-hero__tc { font-size: 26px; }
+    .service-hero__lead { font-size: 15px; }
+    .service-hero__lead-tc { font-size: 15px; }
+  }
+</style>

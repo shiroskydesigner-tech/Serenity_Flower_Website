@@ -1,0 +1,79 @@
+---
+/**
+ * BaseLayout（最底層的 HTML 骨架）
+ * ─────────────────────────────────────────────────
+ * 用途：所有頁面共用的 <html><head><body> 結構。
+ *       設定 <title>、<meta description>、favicon、語言、共用 script。
+ *
+ * 何時用：
+ *   ▸ 一般網頁 → 不直接呼叫，改用 SitePage（會自動套 Header/Footer）
+ *   ▸ admin / 純淨頁面 → 直接用本層，並傳 variant="bare"
+ *
+ * 怎麼設定：
+ *   ▸ 改網頁分頁標題預設 → 各頁面傳 title prop
+ *   ▸ 改 SEO 描述預設 → 改下方 description 預設字串
+ *   ▸ 改 favicon → 換 /public/logo/ 的圖檔，並改 <link rel="icon">
+ *   ▸ 改語言 → 改 <html lang="zh-Hant">
+ *   ▸ 視差捲動腳本 → 在最下方 <script>，控制 [data-parallax] 元素位移
+ */
+import '../styles/global.css';
+
+interface Props {
+  title: string;             // 瀏覽器分頁標題
+  description?: string;      // SEO meta description
+  /** 'site' = 一般頁面，'bare' = 跳過 Header/Footer（admin 用）。 */
+  variant?: 'site' | 'bare';
+}
+const {
+  title,
+  description = 'SERENITY FLOWER · 靜謐花間, installation art, wedding design, and seasonal florals from Taipei.',
+  variant = 'site',
+} = Astro.props;
+---
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/logo/monogram-sf.svg" />
+    <link rel="alternate icon" href="/logo/logo-primary.png" />
+    <title>{title}</title>
+  </head>
+  <body data-variant={variant}>
+    <slot />
+    <script is:inline>
+      (() => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        const nodes = Array.from(document.querySelectorAll('[data-parallax]')).map((el) => ({
+          el,
+          speed: Number(el.getAttribute('data-parallax') || 0.08),
+        }));
+        if (nodes.length === 0) return;
+
+        let ticking = false;
+        const update = () => {
+          const viewportCenter = window.innerHeight / 2;
+          for (const item of nodes) {
+            const rect = item.el.getBoundingClientRect();
+            const elementCenter = rect.top + rect.height / 2;
+            const y = (viewportCenter - elementCenter) * item.speed;
+            item.el.style.setProperty('--parallax-y', `${y.toFixed(2)}px`);
+          }
+          ticking = false;
+        };
+
+        const requestTick = () => {
+          if (ticking) return;
+          ticking = true;
+          window.requestAnimationFrame(update);
+        };
+
+        update();
+        window.addEventListener('scroll', requestTick, { passive: true });
+        window.addEventListener('resize', requestTick);
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,166 @@
+---
+/**
+ * 預約洽談頁（/enquiry）
+ * ─────────────────────────────────────────────────
+ * Hero 區塊 + 預約表單（姓名、聯絡、服務、日期、簡介）
+ *
+ * ⚠️ 重要：目前表單尚未串接後端，送出時只會跳 alert 提示。
+ *         要串接需修改 <form onsubmit="..."> 處的邏輯。
+ *
+ * 怎麼設定：
+ *   ▸ 改大標題「Reserve a date.」→ 改 .enquiry-hero__display
+ *   ▸ 改說明文字（回覆時間等）→ 改 .enquiry-hero__lead / .enquiry-hero__lead-tc
+ *   ▸ 加/減/改表單欄位 → 改 <form> 內的 .enquiry-field
+ *   ▸ 加/改服務類型選項 → 改 <select id="f-service"> 內的 <option>
+ *   ▸ 改送出按鈕文字 → 改 <button type="submit">
+ *   ▸ 改表單 focus 底線顏色 → .enquiry-field input:focus { border-bottom-color }
+ *   ▸ 串接後端 → 改 <form onsubmit="..."> 的 alert 為 fetch('/api/enquiry') 等
+ */
+import SitePage from '../../components/SitePage.astro';
+import EyebrowRule from '../../components/EyebrowRule.astro';
+---
+<SitePage
+  title="Enquiry · 預約 · SERENITY FLOWER"
+  description="Reserve a consultation date."
+  active="Contact"
+>
+  <section class="enquiry-hero">
+    <EyebrowRule en="Enquiry · 預約" />
+    <h1 class="enquiry-hero__display">Reserve a date.</h1>
+    <p class="enquiry-hero__tc">預約洽談。</p>
+    <p class="enquiry-hero__lead">
+      We work by appointment. Fill in the form below and we will return within 3 working days with availability and a preliminary proposal.
+    </p>
+    <p class="enquiry-hero__lead-tc">
+      工作室僅以預約方式洽談。填寫下方表單，我們會在 3 個工作日內回覆檔期與初步提案。
+    </p>
+  </section>
+
+  <form class="enquiry-form" onsubmit="alert('表單尚未串接後端。先請寄信至 hello@serenity-flower.com'); return false;">
+    <div class="enquiry-row">
+      <div class="enquiry-field">
+        <label for="f-name">Name · 姓名</label>
+        <input id="f-name" name="name" type="text" required />
+      </div>
+      <div class="enquiry-field">
+        <label for="f-contact">Email or Line · 聯絡方式</label>
+        <input id="f-contact" name="contact" type="text" required />
+      </div>
+    </div>
+    <div class="enquiry-field">
+      <label for="f-service">Service · 服務類型</label>
+      <select id="f-service" name="service" required>
+        <option value="">— Select —</option>
+        <option value="installation">Installation Art · 裝置藝術</option>
+        <option value="wedding">Wedding Design · 婚禮佈置</option>
+        <option value="seasonal">Seasonal Florals · 節慶花禮</option>
+        <option value="other">Other · 其他</option>
+      </select>
+    </div>
+    <div class="enquiry-field">
+      <label for="f-date">Date · 預計日期</label>
+      <input id="f-date" name="date" type="date" />
+    </div>
+    <div class="enquiry-field">
+      <label for="f-brief">Brief · 簡介</label>
+      <textarea id="f-brief" name="brief" rows="6" placeholder="場地、規模、人數、風格期待、預算範圍..."></textarea>
+    </div>
+    <button type="submit" class="btn btn--primary">Send enquiry · 送出預約</button>
+  </form>
+</SitePage>
+
+<style>
+  .enquiry-hero { padding: var(--s-9) 0 var(--s-7); }
+  .enquiry-hero__display {
+    font-family: var(--font-display-en);
+    font-size: var(--fs-display-2);
+    font-weight: 400;
+    line-height: var(--lh-display);
+    letter-spacing: var(--tr-display);
+    margin: var(--s-4) 0 0;
+  }
+  .enquiry-hero__tc {
+    font-family: var(--font-display-tc);
+    font-size: var(--fs-h2);
+    font-weight: 500;
+    margin: var(--s-2) 0 var(--s-5);
+    max-width: none;
+  }
+  .enquiry-hero__lead {
+    font-family: var(--font-body-en);
+    font-size: 16px;
+    color: var(--ink-70);
+    max-width: 540px;
+  }
+  .enquiry-hero__lead-tc {
+    font-family: var(--font-body-tc);
+    font-size: 15px;
+    color: var(--ink);
+    max-width: 540px;
+  }
+  .enquiry-form {
+    max-width: 720px;
+    padding: var(--s-7) 0 var(--s-10);
+    border-top: 1px solid var(--ink-10);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-5);
+  }
+  .enquiry-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-5); }
+  .enquiry-field label {
+    display: block;
+    font-family: var(--font-body-en);
+    font-size: 11px;
+    letter-spacing: var(--tr-caps);
+    text-transform: uppercase;
+    color: var(--bark);
+    margin-bottom: var(--s-2);
+  }
+  .enquiry-field input,
+  .enquiry-field select,
+  .enquiry-field textarea {
+    width: 100%;
+    padding: var(--s-3) 0;
+    font-family: var(--font-body-tc);
+    font-size: 16px;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--ink-40);
+    border-radius: 0;
+    transition: border-color var(--dur-fast) var(--ease-stately);
+  }
+  /* :focus → 滑鼠/鍵盤都會觸發；底線變粗、變色作為聚焦提示 */
+  .enquiry-field input:focus,
+  .enquiry-field select:focus,
+  .enquiry-field textarea:focus {
+    outline: none;
+    border-bottom-color: var(--bark);
+    border-bottom-width: 2px;
+  }
+  /* :focus-visible → 只有鍵盤聚焦才觸發；額外加 bark ring 強化無障礙提示 */
+  .enquiry-field input:focus-visible,
+  .enquiry-field select:focus-visible,
+  .enquiry-field textarea:focus-visible {
+    outline: 2px solid var(--bark);
+    outline-offset: 4px;
+  }
+  .enquiry-form .btn { align-self: flex-start; }
+  /* Tablet ≤ 960：標題字級降一階 */
+  @media (max-width: 960px) {
+    .enquiry-hero { padding: var(--s-8) 0 var(--s-6); }
+    .enquiry-hero__display { font-size: 56px; }
+    .enquiry-hero__tc { font-size: 32px; }
+  }
+  /* Mobile ≤ 640：表單兩欄改單欄、按鈕拉滿寬 */
+  @media (max-width: 640px) {
+    .enquiry-hero { padding: var(--s-7) 0 var(--s-5); }
+    .enquiry-hero__display { font-size: 42px; line-height: 1.06; }
+    .enquiry-hero__tc { font-size: 24px; }
+    .enquiry-hero__lead,
+    .enquiry-hero__lead-tc { font-size: 15px; }
+    .enquiry-form { padding: var(--s-6) 0 var(--s-9); gap: var(--s-4); }
+    .enquiry-row { grid-template-columns: 1fr; gap: var(--s-4); }
+    .enquiry-form .btn { align-self: stretch; text-align: center; }
+  }
+</style>

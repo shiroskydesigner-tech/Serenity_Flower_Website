@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Components · eyebrow + rule</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  .card { padding: 28px 36px; gap: 24px; flex-direction: row; align-items: stretch; }
+  .col { flex: 1; display: flex; flex-direction: column; gap: 12px; padding-left: 16px; border-left: 2px solid var(--bark); }
+  .col.no-rule { border-left: 0; padding-left: 0; }
+  .eyebrow { font-family: var(--font-body-en); font-size: 10px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--bark); }
+  .tc { font-family: var(--font-display-tc); font-size: 28px; font-weight: 500; line-height: 1.15; letter-spacing: 0.04em; color: var(--ink); }
+  .en { font-family: var(--font-display-en); font-size: 26px; font-weight: 400; line-height: 1.1; color: var(--ink); }
+  .body { font-family: var(--font-body-en); font-size: 12px; line-height: 1.6; color: var(--ink-70); max-width: none; margin-top: 4px; }
+  .label { font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: var(--ink-70); margin-top: auto; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="col">
+      <span class="eyebrow">01 · Installation</span>
+      <div class="en">Installation Art</div>
+      <div class="tc">裝置藝術</div>
+      <p class="body">Sculptural objects and spatial interventions; the visual anchor of a venue.</p>
+      <span class="label">section header pattern</span>
+    </div>
+    <div class="col no-rule">
+      <span class="eyebrow"><span style="display:inline-block;width:28px;height:2px;background:var(--bark);vertical-align:middle;margin-right:10px"></span>Wedding</span>
+      <div class="en">Wedding Design</div>
+      <div class="tc">婚禮佈置</div>
+      <p class="body">Architectural choreography of an event space — movement, voids, and balance.</p>
+      <span class="label">inline rule variant</span>
+    </div>
+  </div>
+</body>
+</html>

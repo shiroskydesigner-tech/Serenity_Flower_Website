@@ -1,0 +1,193 @@
+---
+/**
+ * 單一作品頁（/works/[slug]）
+ * ─────────────────────────────────────────────────
+ * 動態路由：每個作品 .md 檔對應一個獨立網址。
+ * 結構：標題 + 標籤 → Hero 主圖 → 故事內文 → 其餘圖片網格 → 返回連結
+ *
+ * 怎麼設定：
+ *   ▸ 改 Hero 主圖比例/邊距 → 下方 .work-figure--hero
+ *   ▸ 改故事內文最大寬度 → .work-story { max-width: 540px }
+ *   ▸ 改圖片網格排版 → .work-gallery { grid-template-columns: 1fr 1fr }
+ *     目前邏輯：每 3 張中第 1 張會跨整列（idx % 3 === 0）
+ *   ▸ 改標籤外觀 → .work-hero__tags li（邊框、字體、字距）
+ *   ▸ 改視差強度 → 改 HTML 內 data-parallax="0.045"（hero）/ "0.018"（gallery）
+ *   ▸ 改返回連結文字 → 下方 <nav class="work-back"> 內的 <a>
+ *
+ * 作品資料來源：src/content/works/*.md（透過 admin 介面或 batch-publish 腳本產生）
+ */
+import SitePage from '../../components/SitePage.astro';
+import EyebrowRule from '../../components/EyebrowRule.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const works = await getCollection('works');
+  return works.map(w => ({ params: { slug: w.id }, props: { work: w } }));
+}
+
+const { work } = Astro.props;
+const { Content } = await render(work);
+const sortedImages = [...work.data.images].sort((a, b) => a.order - b.order);
+const heroImage = sortedImages.find(i => i.id === work.data.hero) || sortedImages[0];
+const galleryImages = sortedImages.filter(i => i.id !== work.data.hero);
+
+function srcset(variants: typeof heroImage.variants, format: 'webp' | 'avif') {
+  return variants.filter(v => v.format === format).map(v => `${v.src} ${v.width}w`).join(', ');
+}
+---
+<SitePage title={`${work.data.title} · 靜謐花間`} description={work.data.subtitle || work.data.title}>
+
+  <section class="work-hero">
+    <EyebrowRule en={work.data.date.toISOString().slice(0, 10)} />
+    <h1 class="work-hero__title">{work.data.title}</h1>
+    {work.data.subtitle && <p class="work-hero__subtitle">{work.data.subtitle}</p>}
+    {work.data.tags.length > 0 && (
+      <ul class="work-hero__tags">
+        {work.data.tags.map(t => <li>{t}</li>)}
+      </ul>
+    )}
+  </section>
+
+  {heroImage && (
+    <figure class="work-figure work-figure--hero">
+      <picture>
+        <source type="image/avif" srcset={srcset(heroImage.variants, 'avif')} sizes="100vw" />
+        <source type="image/webp" srcset={srcset(heroImage.variants, 'webp')} sizes="100vw" />
+        <img
+          data-parallax="0.045"
+          src={heroImage.variants.find(v => v.format === 'webp')?.src}
+          alt={heroImage.alt}
+          width={heroImage.width}
+          height={heroImage.height}
+          style={`background-image: url(${heroImage.lqip}); background-size: cover;`}
+        />
+      </picture>
+    </figure>
+  )}
+
+  <article class="work-story">
+    <Content />
+  </article>
+
+  {galleryImages.length > 0 && (
+    <section class="work-gallery">
+      {galleryImages.map((img, idx) => (
+        <figure class:list={['work-figure', idx % 3 === 0 && 'work-figure--full']}>
+          <picture>
+            <source type="image/avif" srcset={srcset(img.variants, 'avif')} sizes="(min-width: 960px) 800px, 100vw" />
+            <source type="image/webp" srcset={srcset(img.variants, 'webp')} sizes="(min-width: 960px) 800px, 100vw" />
+            <img
+              data-parallax="0.018"
+              src={img.variants.find(v => v.format === 'webp')?.src}
+              alt={img.alt}
+              width={img.width}
+              height={img.height}
+              loading="lazy"
+              style={`background-image: url(${img.lqip}); background-size: cover;`}
+            />
+          </picture>
+        </figure>
+      ))}
+    </section>
+  )}
+
+  <nav class="work-back">
+    <a href="/works"><span aria-hidden="true">←</span> All works · 所有作品</a>
+  </nav>
+
+</SitePage>
+
+<style>
+  .work-hero { padding: var(--s-9) 0 var(--s-7); max-width: 900px; }
+  .work-hero__title {
+    font-family: var(--font-display-en);
+    font-size: var(--fs-display-2);
+    font-weight: 400;
+    line-height: var(--lh-display);
+    letter-spacing: var(--tr-display);
+    margin: var(--s-4) 0 0;
+  }
+  .work-hero__subtitle {
+    font-family: var(--font-display-en);
+    font-style: italic;
+    font-size: var(--fs-h3);
+    color: var(--ink-70);
+    margin: var(--s-4) 0 0;
+    max-width: none;
+  }
+  .work-hero__tags {
+    list-style: none;
+    padding: 0;
+    margin: var(--s-5) 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+  }
+  .work-hero__tags li {
+    font-family: var(--font-body-en);
+    font-size: 11px;
+    letter-spacing: var(--tr-caps-tight);
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border: 1px solid var(--ink-40);
+    color: var(--ink-70);
+  }
+
+  .work-figure { margin: 0; background: var(--white); overflow: hidden; }
+  .work-figure img {
+    --parallax-scale: 1.04;
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .work-figure--hero { margin: var(--s-4) 0 var(--s-9); }
+
+  .work-story {
+    max-width: 540px;
+    margin: 0 0 var(--s-9);
+    font-family: var(--font-body-tc);
+    font-size: 16px;
+    line-height: var(--lh-tc-body);
+    color: var(--ink);
+  }
+  .work-story :global(p) { margin-bottom: var(--s-4); max-width: none; }
+
+  .work-gallery {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--s-5);
+    margin-bottom: var(--s-9);
+  }
+  .work-figure--full { grid-column: 1 / -1; }
+
+  .work-back {
+    padding: var(--s-7) 0 var(--s-9);
+    border-top: 1px solid var(--ink-10);
+  }
+  .work-back a {
+    font-family: var(--font-body-en);
+    font-size: 11px;
+    letter-spacing: var(--tr-caps);
+    text-transform: uppercase;
+    color: var(--ink-70);
+  }
+
+  /* Tablet ≤ 960：圖片網格改單欄、字級降一階 */
+  @media (max-width: 960px) {
+    .work-hero { padding: var(--s-8) 0 var(--s-6); }
+    .work-hero__title { font-size: 56px; }
+    .work-hero__subtitle { font-size: 22px; }
+    .work-figure--hero { margin: var(--s-4) 0 var(--s-7); }
+    .work-gallery { grid-template-columns: 1fr; gap: var(--s-4); }
+    .work-story { font-size: 15px; }
+  }
+  /* Mobile ≤ 640 */
+  @media (max-width: 640px) {
+    .work-hero { padding: var(--s-7) 0 var(--s-5); }
+    .work-hero__title { font-size: 42px; line-height: 1.08; }
+    .work-hero__subtitle { font-size: 19px; }
+    .work-hero__tags { gap: 6px; }
+    .work-hero__tags li { font-size: 10px; padding: 3px 9px; }
+    .work-back { padding: var(--s-6) 0 var(--s-7); }
+  }
+</style>

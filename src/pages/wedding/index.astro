@@ -1,0 +1,32 @@
+---
+/**
+ * 婚禮佈置服務頁（/wedding）
+ * ─────────────────────────────────────────────────
+ * 結構：ServiceHero + WorkList
+ *
+ * 怎麼設定：
+ *   ▸ 改服務介紹文字 → 改下方 <ServiceHero> 的 lead / leadTc
+ *   ▸ 改顯示作品條件 → 改 filterTags（目前 wedding / wedding-setup / bouquet-wedding / corsage）
+ *   ▸ 改空狀態提示 → emptyMessage
+ */
+import SitePage from '../../components/SitePage.astro';
+import ServiceHero from '../../components/ServiceHero.astro';
+import WorkList from '../../components/WorkList.astro';
+---
+<SitePage
+  title="Wedding Design · 婚禮佈置 · SERENITY FLOWER"
+  description="Architectural choreography of an event space — movement, voids, and balance."
+  active="Wedding"
+>
+  <ServiceHero
+    num="02"
+    en="Wedding Design"
+    tc="婚禮佈置"
+    lead="Architectural choreography of an event space. Movement, voids, and balance composed with the restraint of a building, not the abundance of a garden."
+    leadTc="建築式的空間編排。以節制與留白替代繁盛與堆疊，讓動線、量體與張力構築婚禮現場的骨架。"
+  />
+  <WorkList
+    filterTags={["wedding", "wedding-setup", "bouquet-wedding", "corsage"]}
+    emptyMessage="尚未發佈婚禮作品。"
+  />
+</SitePage>

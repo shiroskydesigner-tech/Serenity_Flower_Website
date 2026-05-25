@@ -1,0 +1,182 @@
+/* ============================================================
+   Global element defaults（全站基礎元素樣式）
+   ----
+   ▸ 設定範圍：HTML 基礎元素的預設外觀
+     （body 字體、標題 h1~h4、段落 p、連結 a、按鈕 .btn、選取色等）
+   ▸ 顏色/字體要改 → 改 tokens.css，不是這支
+   ▸ 改連結底線動畫 → 找下方「Links」區塊
+   ▸ 改按鈕外觀 → 找下方「Buttons」區塊
+   ▸ 改文字選取顏色 → 找下方「Selection」區塊
+   ▸ 改 parallax/hover 縮放效果 → 找下方「Scroll depth」區塊
+   ▸ 系統若開啟「減少動態」→ 自動套用「Reduced motion」區塊
+   ============================================================ */
+
+@import './tokens.css';
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+html { font-size: 16px; }
+
+body {
+  background: var(--linen);
+  color: var(--ink);
+  font-family: var(--font-body-en);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: var(--w-regular);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img, svg, video { max-width: 100%; display: block; }
+
+/* Display heading defaults — Bell at regular weight */
+h1, h2, h3 {
+  font-family: var(--font-display-en);
+  font-weight: var(--w-regular);
+  letter-spacing: var(--tr-heading);
+  margin: 0;
+}
+h1 { font-size: var(--fs-h1); line-height: var(--lh-heading); }
+h2 { font-size: var(--fs-h2); line-height: var(--lh-heading); }
+h3 { font-size: var(--fs-h3); line-height: var(--lh-heading); }
+h4 {
+  font-family: var(--font-body-en);
+  font-size: var(--fs-h4);
+  font-weight: var(--w-medium);
+  letter-spacing: var(--tr-caps-tight);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* CJK opt-in */
+.tc { font-family: var(--font-body-tc); line-height: var(--lh-tc-body); }
+.tc.display, .tc h1, .tc h2, .tc h3 {
+  font-family: var(--font-display-tc);
+  font-weight: var(--w-medium);
+}
+
+/* Prose */
+p {
+  margin: 0 0 var(--s-4);
+  max-width: var(--content-max);
+  text-wrap: pretty;
+}
+
+/* Eyebrow — small caps section markers, the brand's preferred label form */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--font-body-en);
+  font-size: var(--fs-caption);
+  font-weight: var(--w-medium);
+  letter-spacing: var(--tr-caps);
+  text-transform: uppercase;
+  color: var(--bark);
+}
+
+/* Inline rule — 2px structural marker that precedes an eyebrow */
+.rule {
+  display: inline-block;
+  width: 36px;
+  height: var(--line-rule);
+  background: var(--bark);
+  vertical-align: middle;
+}
+
+/* Wordmark utility */
+.wordmark {
+  font-family: var(--font-display-en);
+  font-weight: var(--w-regular);
+  letter-spacing: var(--tr-caps);
+  text-transform: uppercase;
+  font-size: var(--fs-h4);
+  color: var(--ink);
+}
+
+/* Links — underline reveal（連結底線：左→右展開，無變色）
+   品牌規範：連結 hover 不變色，只展開底線。
+   想關閉動畫 → 移除整個 transition 行
+   想改速度 → 改 0.2s（同時建議與其他 hover 一致） */
+a {
+  color: inherit;
+  text-decoration: none;
+  background-image: linear-gradient(var(--ink), var(--ink));
+  background-repeat: no-repeat;
+  background-size: 0 1px;
+  background-position: 0 100%;
+  transition: background-size 0.2s ease;
+}
+a:hover { background-size: 100% 1px; }
+
+/* Buttons — flat rectangles, square corners, ink/bark hover */
+.btn {
+  font-family: var(--font-body-en);
+  font-size: var(--fs-small);
+  font-weight: var(--w-medium);
+  letter-spacing: var(--tr-caps-tight);
+  text-transform: uppercase;
+  padding: 14px 28px;
+  border: 1px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  border-radius: 0;
+  background-image: none;
+  transition: background var(--dur-fast) var(--ease-stately),
+              color var(--dur-fast) var(--ease-stately);
+}
+.btn:hover { background: var(--ink); color: var(--white); }
+.btn:active { opacity: 0.88; }
+.btn--primary { background: var(--ink); color: var(--white); }
+.btn--primary:hover { background: var(--bark); }
+.btn--cream { background: var(--white); color: var(--ink); }
+.btn--cream:hover { background: var(--ink); color: var(--white); }
+
+/* Selection（文字選取色）
+   滑鼠拖曳選取文字時的顏色 — 改 bark（強調色）與 white（米白）即可。 */
+::selection { background: var(--bark); color: var(--white); }
+
+/* Scroll depth（捲動視差 + hover 縮放底層機制）
+   說明：頁面上有 data-parallax 屬性的圖片會隨捲動微幅位移（深度感）。
+        速度由 HTML 的 data-parallax="0.05" 數值決定（0=不動、越大越明顯）。
+   注意：hover 縮放改用 `scale:` 屬性（在各元件內），不在這裡控制。
+   想關閉視差 → 移除 transform 行，或在 HTML 移除 data-parallax 屬性。 */
+@property --parallax-scale {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 1;
+}
+[data-parallax] {
+  --parallax-y: 0px;
+  --parallax-scale: 1;
+  transform: translate3d(0, var(--parallax-y), 0) scale(var(--parallax-scale));
+  transform-origin: center;
+  will-change: transform;
+  transition: --parallax-scale 0.2s ease,
+              filter 0.2s ease;
+}
+
+/* Focus */
+:focus-visible {
+  outline: 2px solid var(--bark);
+  outline-offset: 3px;
+  border-radius: 0;
+}
+
+/* Reduced motion（系統開啟「減少動態」時自動降效）
+   無障礙要求 — 不應修改，除非你了解 a11y 影響。
+   觸發時機：macOS 系統偏好 / Windows 動畫設定關閉時。
+   行為：所有 transition / animation 變 0.01ms（瞬間切換），parallax 停用。 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  [data-parallax] {
+    transform: none !important;
+  }
+}

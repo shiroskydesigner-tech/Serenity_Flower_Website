@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Components · form input</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  .card { padding: 28px 36px; gap: 20px; }
+  .eyebrow { font-family: var(--font-body-en); font-size: 10px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--bark); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; align-items: end; }
+  .f { display: flex; flex-direction: column; gap: 6px; }
+  .f label { font-family: var(--font-body-en); font-size: 10px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--bark); }
+  .f input, .f select { font-family: var(--font-body-en); font-size: 14px; padding: 10px 0; border: 0; border-bottom: 1px solid var(--ink); background: transparent; color: var(--ink); border-radius: 0; outline: none; appearance: none; }
+  .f input::placeholder { color: var(--ink-40); }
+  .f.focused input { border-bottom-color: var(--bark); border-bottom-width: 2px; padding-bottom: 9px; }
+  .f .help { font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: var(--ink-70); }
+</style>
+</head>
+<body>
+  <div class="card">
+    <span class="eyebrow">Form input · underline-only</span>
+    <div class="grid">
+      <div class="f"><label>Name</label><input value="Mei-Lin Tsai"></div>
+      <div class="f focused"><label>Event date</label><input value="07 · 10 · 2026"></div>
+      <div class="f"><label>Service interest</label><input placeholder="Installation, Wedding, Florals…"></div>
+    </div>
+  </div>
+</body>
+</html>

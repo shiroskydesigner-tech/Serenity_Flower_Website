@@ -1,0 +1,53 @@
+---
+/**
+ * 商店頁（/shop · 線上購物）
+ * ─────────────────────────────────────────────────
+ * 商店功能尚未開放，永遠顯示「Opening soon.」佔位頁。
+ * 一旦商品建好，把 .env 設 PUBLIC_SHOP_ENABLED=true 並重寫此頁為商品列表。
+ *
+ * 怎麼設定：
+ *   ▸ 改「Opening soon.」標題 → 下方 .shop-hero__display
+ *   ▸ 改中文標題「商品區即將開放。」 → .shop-hero__tc
+ *   ▸ 改說明文字 → .shop-hero__lead
+ *   ▸ 開始建商品 → 這頁需要重寫，加入商品列表與購物車邏輯（目前未實作）
+ */
+import SitePage from '../../components/SitePage.astro';
+import EyebrowRule from '../../components/EyebrowRule.astro';
+---
+<SitePage
+  title="Shop · 線上購物 · SERENITY FLOWER"
+  description="Seasonal floral products — opening soon."
+  active="Shop"
+>
+  <section class="shop-hero">
+    <EyebrowRule en="Shop · 線上購物" />
+    <h1 class="shop-hero__display">Opening soon.</h1>
+    <p class="shop-hero__tc">線上購物即將開放。</p>
+    <p class="shop-hero__lead">
+      The shop is in preparation. Seasonal pieces will be listed here when curated.
+    </p>
+  </section>
+</SitePage>
+
+<style>
+  .shop-hero { padding: var(--s-9) 0 var(--s-10); }
+  .shop-hero__display {
+    font-family: var(--font-display-en);
+    font-size: var(--fs-display-2);
+    font-weight: 400;
+    line-height: var(--lh-display);
+    margin: var(--s-4) 0 0;
+  }
+  .shop-hero__tc {
+    font-family: var(--font-display-tc);
+    font-size: var(--fs-h2);
+    font-weight: 500;
+    margin: var(--s-2) 0 var(--s-5);
+    max-width: none;
+  }
+  .shop-hero__lead {
+    font-family: var(--font-body-en);
+    font-size: 16px;
+    color: var(--ink-70);
+  }
+</style>

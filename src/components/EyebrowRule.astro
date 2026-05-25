@@ -1,0 +1,60 @@
+---
+/**
+ * EyebrowRule（章節小標：bark 色 2px 短線 + 英文 small-caps + 可選繁中）
+ * ─────────────────────────────────────────────────
+ * 用途：每個章節最上方的「小標記」，品牌簽名式視覺元素。
+ *
+ * 使用範例：
+ *   <EyebrowRule en="Manifesto" tc="宣言" />
+ *   <EyebrowRule en="Recent Works" />
+ *   <EyebrowRule en="Service" ruleWidth={24} />     ← 用較短的線
+ *
+ * 怎麼設定：
+ *   ▸ 改線條顏色 → 下方 .sf-eyebrow__rule { background: var(--bark) }
+ *   ▸ 改線條粗細 → 下方 .sf-eyebrow__rule { height: 2px }
+ *   ▸ 改英文字大小/字距 → 下方 .sf-eyebrow__en
+ *   ▸ 改中文字大小/字距 → 下方 .sf-eyebrow__tc
+ */
+interface Props {
+  en: string;                 // 英文標題（必填，small caps）
+  tc?: string;                // 中文副標（選填）
+  /** 起首線條寬度（px）。預設 36，較窄場景用 24。 */
+  ruleWidth?: number;
+}
+const { en, tc, ruleWidth = 36 } = Astro.props;
+---
+<span class="sf-eyebrow">
+  <span class="sf-eyebrow__rule" style={`width:${ruleWidth}px`}></span>
+  <span class="sf-eyebrow__en">{en}</span>
+  {tc && <span class="sf-eyebrow__tc">{tc}</span>}
+</span>
+
+<style>
+  .sf-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    line-height: 1;
+  }
+  .sf-eyebrow__rule {
+    display: inline-block;
+    height: 2px;
+    background: var(--bark);
+    flex-shrink: 0;
+  }
+  .sf-eyebrow__en {
+    font-family: var(--font-body-en);
+    font-size: var(--fs-caption);
+    font-weight: 500;
+    letter-spacing: var(--tr-caps);
+    text-transform: uppercase;
+    color: var(--bark);
+  }
+  .sf-eyebrow__tc {
+    font-family: var(--font-body-tc);
+    font-size: 11px;                /* 10→11px：行動裝置最低 11px 提升可讀性 */
+    letter-spacing: 0.18em;
+    color: var(--ink-70);           /* ink-40→ink-70：WCAG AA 4.5:1 */
+    margin-left: 4px;
+  }
+</style>

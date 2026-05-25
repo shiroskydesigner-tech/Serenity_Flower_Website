@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Components · links + nav</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  .card { padding: 28px 36px; gap: 22px; }
+  .eyebrow { font-family: var(--font-body-en); font-size: 10px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--bark); }
+  .nav { display: flex; gap: 36px; align-items: center; }
+  .nav a { font-family: var(--font-body-en); font-size: 12px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink); text-decoration: none; position: relative; padding-bottom: 4px; }
+  .nav a::after { content: ""; position: absolute; bottom: 0; left: 0; height: 1px; background: var(--ink); transition: width 320ms cubic-bezier(0.16,1,0.3,1); }
+  .nav a.default::after { width: 0; }
+  .nav a.hover::after { width: 100%; }
+  .nav a.active::after { width: 100%; background: var(--bark); }
+  .nav .lbl { font-family: ui-monospace, Menlo, monospace; font-size: 9px; color: var(--ink-70); position: absolute; top: 100%; left: 0; margin-top: 6px; letter-spacing: 0; text-transform: none; }
+  .item { position: relative; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <span class="eyebrow">Link · nav · underline reveal</span>
+    <div class="nav">
+      <span class="item"><a class="default" href="#">Atelier</a><span class="lbl">default</span></span>
+      <span class="item"><a class="hover" href="#">Installation</a><span class="lbl">hover</span></span>
+      <span class="item"><a class="active" href="#">Wedding</a><span class="lbl">active (bark)</span></span>
+      <span class="item"><a class="default" href="#">Florals</a><span class="lbl">default</span></span>
+      <span class="item"><a class="default" href="#">Contact</a><span class="lbl">default</span></span>
+    </div>
+  </div>
+</body>
+</html>

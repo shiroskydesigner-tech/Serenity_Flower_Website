@@ -1,0 +1,1272 @@
+---
+/**
+ * Admin 策展後台（/admin）
+ * ─────────────────────────────────────────────────
+ * 用途：從來源照片資料夾選圖、排序、加標籤、輸入文案，一鍵發佈成官網作品。
+ *       僅在開發環境（npm run dev）可使用，正式環境會回 404。
+ *
+ * 工作流程（畫面上 3 步驟）：
+ *   1. 選資料夾 → 讀取 D:/SynologyDrive/02_靜謐花間_0A/02_作品照片區/
+ *   2. 選照片與排序 → 點擊順序即為作品圖片順序
+ *   3. 填資料並發佈 → 寫入 src/content/works/<slug>.md 與處理後的圖片
+ *
+ * 設定來源：
+ *   ▸ 換照片資料夾路徑 → 環境變數 ADMIN_SOURCE_ROOT，或改 api/admin/sources.ts 的 SOURCE_ROOT
+ *   ▸ 標籤清單 → src/content/tags.json
+ *   ▸ 圖片輸出規格（寬度、格式、品質）→ api/admin/publish.ts 的 WIDTHS / FORMATS / QUALITY
+ *
+ * ⚠️ 這頁 UI 與 JS 邏輯較長，一般使用者只需理解流程；
+ *    要改畫面元素/樣式直接搜尋對應 class 名稱即可（class 命名為 .topbar / .workflow / .palette / .layout / .rail 等）。
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Wordmark from '../../components/Wordmark.astro';
+---
+<BaseLayout title="Admin · 策展" variant="bare">
+  <main id="app">
+    <header class="topbar">
+      <div class="topbar__brand">
+        <Wordmark size={40} compact />
+        <div class="topbar__title">
+          <span class="topbar__sub">Curation · 策展後台</span>
+          <span class="topbar__note">從照片資料夾建立官網作品，發佈後立即寫入作品集。</span>
+        </div>
+      </div>
+      <div class="topbar__right">
+        <a class="topbar-link" href="/" target="_blank" rel="noreferrer">查看官網</a>
+        <a class="topbar-link" href="/works" target="_blank" rel="noreferrer">查看作品集</a>
+        <div class="status" id="status" role="status" aria-live="polite">載入中。</div>
+      </div>
+    </header>
+
+    <section class="workflow" aria-label="策展流程">
+      <div class="workflow-step is-active" data-step="folder">
+        <span class="workflow-step__num">1</span>
+        <span>
+          <strong>選資料夾</strong>
+          <small>讀取原始照片</small>
+        </span>
+      </div>
+      <div class="workflow-step" data-step="select">
+        <span class="workflow-step__num">2</span>
+        <span>
+          <strong>選照片與排序</strong>
+          <small>點擊順序就是作品順序</small>
+        </span>
+      </div>
+      <div class="workflow-step" data-step="publish">
+        <span class="workflow-step__num">3</span>
+        <span>
+          <strong>填資料並發佈</strong>
+          <small>輸出到官網作品集</small>
+        </span>
+      </div>
+    </section>
+
+    <section class="palette" id="palette" aria-label="標籤面板">
+      <div class="palette-meta">
+        <span class="eyebrow"><span class="rule" style="width:24px"></span> Tags · 標籤</span>
+        <span class="palette-hint">拖到照片可標記單張或已選照片。建立作品後，點標籤可加入整件作品。</span>
+      </div>
+      <div class="palette-groups" id="palette-groups"></div>
+    </section>
+
+    <section class="layout">
+      <aside class="rail rail-folders" aria-label="來源資料夾">
+        <header class="rail-head">
+          <span class="eyebrow"><span class="rule" style="width:18px"></span> Sources</span>
+          <h2>資料夾</h2>
+        </header>
+        <label class="search-field">
+          <span>搜尋資料夾</span>
+          <input id="folder-search" type="search" placeholder="輸入日期、客戶或關鍵字">
+        </label>
+        <ul id="folder-list" class="folder-list"></ul>
+      </aside>
+
+      <section class="canvas">
+        <header class="canvas-head">
+          <div class="canvas-title">
+            <span class="eyebrow"><span class="rule" style="width:18px"></span> Curating · 策展中</span>
+            <h2 id="current-folder"><em>選資料夾，開始策展。</em></h2>
+            <div class="canvas-stats" id="canvas-stats">
+              <span>尚未選擇資料夾</span>
+            </div>
+          </div>
+          <div class="actions">
+            <button id="btn-select-all" class="btn" disabled>全選</button>
+            <button id="btn-select-none" class="btn" disabled>清除</button>
+            <button id="btn-new-work" class="btn btn--primary" disabled>建立作品 →</button>
+          </div>
+        </header>
+        <div class="canvas-tools">
+          <label class="search-field search-field--inline">
+            <span>搜尋照片</span>
+            <input id="image-search" type="search" placeholder="檔名或子資料夾">
+          </label>
+          <p class="selection-help" id="selection-help">點照片加入作品。選取順序會成為發佈順序，第 1 張是封面。</p>
+        </div>
+        <div id="grid" class="grid">
+          <div class="canvas-empty">
+            <p class="display-empty"><em>請於左側選一個資料夾。</em></p>
+          </div>
+        </div>
+      </section>
+
+      <aside class="rail rail-work" aria-label="作品編輯">
+        <header class="rail-head">
+          <span class="eyebrow"><span class="rule" style="width:18px"></span> Edit · 編輯</span>
+          <h2>作品</h2>
+        </header>
+        <div id="work-form">
+          <div class="empty-state">
+            <strong>尚未建立作品草稿</strong>
+            <p>先在中間選照片，再按「建立作品」。右側會出現標題、內文、標籤與每張圖的 alt 欄位。</p>
+          </div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <style>
+    /* === Admin shell — product register, brand tokens === */
+    main {
+      padding: var(--s-6) var(--s-7) var(--s-9);
+      max-width: 1920px;
+      margin: 0 auto;
+      font-family: var(--font-body-en);
+      background: var(--linen);
+    }
+
+    /* Topbar */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: var(--s-4);
+      margin-bottom: var(--s-6);
+      border-bottom: 1px solid var(--ink-10);
+    }
+    .topbar__brand {
+      display: flex;
+      align-items: center;
+      gap: var(--s-5);
+    }
+    .topbar__title {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding-left: var(--s-4);
+      border-left: 1px solid var(--ink-10);
+    }
+    .topbar__sub {
+      font-family: var(--font-body-en);
+      font-size: var(--fs-caption);
+      letter-spacing: var(--tr-caps);
+      text-transform: uppercase;
+      color: var(--bark);
+    }
+    .topbar__note {
+      font-family: var(--font-body-tc);
+      font-size: 13px;
+      color: var(--ink-70);
+    }
+    .topbar__right {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: var(--s-2);
+      flex-wrap: wrap;
+    }
+    .topbar-link {
+      padding: 7px 10px;
+      border: 1px solid var(--ink-10);
+      background: var(--white);
+      color: var(--ink-70);
+      font-family: var(--font-body-tc);
+      font-size: 12px;
+      background-image: none;
+      transition: border-color var(--dur-fast) var(--ease-stately),
+                  color var(--dur-fast) var(--ease-stately);
+    }
+    .topbar-link:hover {
+      color: var(--ink);
+      border-color: var(--ink-40);
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      min-height: 31px;
+      padding: 0 10px;
+      background: var(--white);
+      border: 1px solid var(--ink-10);
+      font-family: var(--font-body-en);
+      font-size: var(--fs-caption);
+      letter-spacing: var(--tr-caps-tight);
+      text-transform: uppercase;
+      color: var(--ink-70);
+    }
+    .status::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      margin-right: 8px;
+      background: var(--bark);
+      border-radius: 999px;
+    }
+
+    .workflow {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--s-3);
+      margin-bottom: var(--s-6);
+    }
+    .workflow-step {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: var(--s-3);
+      align-items: center;
+      padding: var(--s-3);
+      background: color-mix(in srgb, var(--white) 72%, var(--linen));
+      border: 1px solid var(--ink-10);
+      color: var(--ink-40);
+    }
+    .workflow-step.is-active {
+      background: var(--white);
+      border-color: var(--bark);
+      color: var(--ink);
+    }
+    .workflow-step__num {
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--linen);
+      border: 1px solid var(--ink-10);
+      font-family: var(--font-body-en);
+      font-size: 12px;
+    }
+    .workflow-step.is-active .workflow-step__num {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: var(--white);
+    }
+    .workflow-step strong {
+      display: block;
+      font-family: var(--font-body-tc);
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .workflow-step small {
+      display: block;
+      margin-top: 2px;
+      font-family: var(--font-body-tc);
+      font-size: 12px;
+      color: var(--ink-70);
+    }
+
+    /* Palette — flat, hairline-bound */
+    .palette {
+      padding: var(--s-4) 0 var(--s-5);
+      margin-bottom: var(--s-7);
+      border-bottom: 1px solid var(--ink-10);
+    }
+    .palette-meta {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: var(--s-4);
+      flex-wrap: wrap;
+      gap: var(--s-3);
+    }
+    .palette-hint {
+      font-family: var(--font-body-tc);
+      font-size: var(--fs-caption);
+      color: var(--ink-40);
+    }
+    .palette-groups {
+      display: flex; flex-wrap: wrap;
+      gap: var(--s-5) var(--s-7);
+      align-items: flex-start;
+    }
+    .palette-group { display: flex; flex-direction: column; gap: var(--s-2); }
+    .palette-group-label {
+      font-family: var(--font-body-en);
+      font-size: 10px;
+      letter-spacing: var(--tr-caps);
+      text-transform: uppercase;
+      color: var(--bark);
+    }
+    .palette-chips { display: flex; flex-wrap: wrap; gap: var(--s-1); }
+
+    .chip {
+      padding: 5px 14px;
+      font-family: var(--font-body-tc);
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--ink);
+      background: var(--white);
+      border: 1px solid var(--ink-20);
+      border-radius: 2px;
+      cursor: grab;
+      user-select: none;
+      transition: background var(--dur-fast) var(--ease-stately),
+                  color var(--dur-fast) var(--ease-stately),
+                  border-color var(--dur-fast) var(--ease-stately);
+    }
+    .chip:hover { background: var(--ink); color: var(--white); border-color: var(--ink); }
+    .chip:active { cursor: grabbing; opacity: 0.88; }
+    .chip.dragging { opacity: 0.4; }
+    /* Group differentiation via top border, NOT background — keeps composition to 3 tones. */
+    .chip[data-group="form"]     { border-top: 2px solid var(--ink); }
+    .chip[data-group="scene"]    { border-top: 2px solid var(--bark); }
+    .chip[data-group="occasion"] { border-top: 2px solid var(--bark-60); }
+    .chip[data-group="kind"]     { border-top: 2px dashed var(--ink-70); }
+
+    /* Three-column layout */
+    .layout {
+      display: grid;
+      grid-template-columns: 240px minmax(0, 1fr) 360px;
+      gap: var(--s-6);
+      align-items: start;
+    }
+    .rail {
+      position: sticky;
+      top: var(--s-4);
+      max-height: calc(100vh - var(--s-7));
+      overflow-y: auto;
+      background: var(--white);
+      padding: var(--s-5) var(--s-5);
+    }
+    .rail-head {
+      display: flex; flex-direction: column; gap: var(--s-2);
+      padding-bottom: var(--s-4);
+      margin-bottom: var(--s-4);
+      border-bottom: 1px solid var(--ink-10);
+    }
+    .rail-head h2 {
+      font-family: var(--font-display-tc);
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--ink);
+      margin: 0;
+      line-height: 1.2;
+    }
+
+    .search-field {
+      display: flex;
+      flex-direction: column;
+      gap: var(--s-2);
+      margin-bottom: var(--s-4);
+      font-family: var(--font-body-tc);
+    }
+    .search-field span {
+      font-family: var(--font-body-en);
+      font-size: 10px;
+      letter-spacing: var(--tr-caps);
+      text-transform: uppercase;
+      color: var(--bark);
+    }
+    .search-field input {
+      width: 100%;
+      min-height: 36px;
+      padding: 8px 10px;
+      border: 1px solid var(--ink-20);
+      background: var(--linen);
+      color: var(--ink);
+      font-family: var(--font-body-tc);
+      font-size: 13px;
+      border-radius: 0;
+    }
+    .search-field input:focus {
+      outline: none;
+      border-color: var(--bark);
+      background: var(--white);
+    }
+    .search-field--inline {
+      min-width: 260px;
+      margin-bottom: 0;
+    }
+
+    /* Folder list — hairlined typographic list */
+    .folder-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .folder-list li button {
+      width: 100%;
+      text-align: left;
+      padding: var(--s-3) 0 var(--s-3) var(--s-4);
+      background: none;
+      border: none;
+      border-top: 1px solid var(--ink-10);
+      cursor: pointer;
+      font-family: var(--font-body-tc);
+      font-size: 13px;
+      color: var(--ink-70);
+      word-break: break-all;
+      line-height: 1.4;
+      position: relative;
+      transition: color var(--dur-fast) var(--ease-stately),
+                  background var(--dur-fast) var(--ease-stately);
+    }
+    .folder-list li:last-child button { border-bottom: 1px solid var(--ink-10); }
+    .folder-list li button:hover:not(:disabled) {
+      color: var(--ink);
+      background: var(--linen);
+    }
+    .folder-list li button:disabled { color: var(--ink-20); cursor: not-allowed; }
+    .folder-list li button.active {
+      color: var(--ink);
+      font-weight: 500;
+      background: var(--linen);
+    }
+    .folder-list li button.active::before {
+      content: '';
+      position: absolute;
+      left: 0; top: var(--s-3); bottom: var(--s-3);
+      width: 2px;
+      background: var(--bark);
+    }
+    .folder-list .count {
+      color: var(--ink-40);
+      font-family: var(--font-body-en);
+      font-size: 11px;
+      letter-spacing: var(--tr-caps-tight);
+      margin-left: var(--s-2);
+    }
+    .folder-empty {
+      padding: var(--s-3) 0;
+      color: var(--ink-40);
+      font-family: var(--font-body-tc);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    /* Canvas (centre) */
+    .canvas {
+      min-width: 0;
+      background: var(--white);
+      padding: var(--s-5) var(--s-6);
+    }
+    .canvas-head {
+      display: flex; justify-content: space-between; align-items: flex-end;
+      gap: var(--s-5);
+      margin-bottom: var(--s-5);
+      padding-bottom: var(--s-4);
+      border-bottom: 1px solid var(--ink-10);
+    }
+    .canvas-title { display: flex; flex-direction: column; gap: var(--s-2); min-width: 0; }
+    .canvas-title h2 {
+      font-family: var(--font-display-tc);
+      font-size: 26px;
+      font-weight: 500;
+      color: var(--ink);
+      word-break: break-all;
+      line-height: 1.2;
+      margin: 0;
+    }
+    .canvas-title h2 em {
+      font-family: var(--font-display-en);
+      font-style: italic;
+      color: var(--ink-40);
+      font-weight: 400;
+    }
+    .canvas-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-2);
+      font-family: var(--font-body-tc);
+      font-size: 12px;
+      color: var(--ink-70);
+    }
+    .canvas-stats span {
+      padding: 4px 8px;
+      background: var(--linen);
+      border: 1px solid var(--ink-10);
+    }
+
+    .actions { display: flex; gap: var(--s-2); flex-shrink: 0; }
+    /* Override global .btn for admin density */
+    .actions .btn {
+      padding: 8px 14px;
+      font-size: 11px;
+      letter-spacing: var(--tr-caps-tight);
+      border-radius: 0;
+    }
+    .canvas-tools {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: var(--s-4);
+      margin-bottom: var(--s-4);
+    }
+    .selection-help {
+      max-width: 46ch;
+      margin: 0;
+      color: var(--ink-70);
+      font-family: var(--font-body-tc);
+      font-size: 13px;
+      line-height: 1.55;
+      text-align: right;
+    }
+
+    /* Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: var(--s-2);
+      min-height: 12rem;
+    }
+    .canvas-empty {
+      grid-column: 1 / -1;
+      min-height: 50vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .display-empty {
+      font-family: var(--font-display-en);
+      font-size: 28px;
+      color: var(--ink-40);
+      font-style: italic;
+      font-weight: 400;
+      max-width: none;
+    }
+    .display-empty em { font-family: inherit; }
+    .thumb {
+      position: relative;
+      cursor: pointer;
+      overflow: hidden;
+      background: var(--linen);
+      border: 1px solid transparent;
+      transition: opacity var(--dur-fast) var(--ease-stately),
+                  border-color var(--dur-fast) var(--ease-stately),
+                  transform var(--dur-fast) var(--ease-stately),
+                  box-shadow var(--dur-fast) var(--ease-stately);
+    }
+    .thumb img {
+      display: block; width: 100%; height: 160px; object-fit: cover;
+    }
+    .no-thumb-placeholder {
+      width: 100%;
+      height: 160px;
+      background: repeating-linear-gradient(45deg,
+        var(--linen) 0 8px,
+        var(--white) 8px 16px);
+    }
+    .thumb--loading {
+      pointer-events: none;
+      opacity: 0.65;
+    }
+    .thumb--loading .no-thumb-placeholder {
+      animation: fade-in var(--dur-base) var(--ease-stately) infinite alternate;
+    }
+    .thumb:hover { opacity: 0.88; transform: translateY(-2px); }
+    .thumb.no-thumb img {
+      background: repeating-linear-gradient(45deg,
+        var(--linen) 0 8px,
+        var(--white) 8px 16px);
+    }
+    .thumb.selected {
+      border-color: var(--ink);
+      box-shadow: 0 12px 28px rgba(62, 45, 33, 0.18), inset 0 0 0 2px var(--ink);
+      opacity: 1;
+      transform: translateY(-3px);
+    }
+    .thumb.selected::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border: 1px solid rgba(238, 229, 214, 0.92);
+      background: rgba(238, 229, 214, 0.16);
+      pointer-events: none;
+      animation: select-flash 420ms var(--ease-stately) both;
+      z-index: 1;
+    }
+    .thumb.drop-target { border-color: var(--bark); }
+    .thumb.drop-target::after {
+      content: '';
+      position: absolute; inset: 0;
+      border: 2px solid var(--bark);
+      pointer-events: none;
+    }
+    .thumb .badge {
+      position: absolute; top: 8px; left: 8px;
+      min-width: 22px; height: 22px; padding: 0 7px;
+      background: var(--ink); color: var(--white);
+      display: none; align-items: center; justify-content: center;
+      font-family: var(--font-body-en);
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      border-radius: 0;
+      transform: scale(0.76);
+      transition: transform var(--dur-fast) var(--ease-stately);
+      z-index: 2;
+    }
+    .thumb.selected .badge { display: flex; transform: scale(1); }
+    .thumb .img-tags {
+      position: absolute; top: 6px; right: 6px;
+      display: flex; flex-direction: column; gap: 3px; align-items: flex-end;
+      max-width: 75%;
+      z-index: 2;
+    }
+    .thumb .img-tag {
+      font-family: var(--font-body-tc);
+      font-size: 11px;
+      padding: 2px 7px;
+      background: var(--white);
+      color: var(--ink);
+      border: 1px solid var(--ink-20);
+      cursor: pointer;
+      transition: background var(--dur-fast) var(--ease-stately), color var(--dur-fast) var(--ease-stately);
+    }
+    .thumb .img-tag:hover { background: var(--bark); color: var(--white); border-color: var(--bark); }
+    .thumb .name {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: var(--s-2) var(--s-3);
+      background: linear-gradient(to top, rgba(62,45,33,0.85), rgba(62,45,33,0));
+      color: var(--white);
+      font-family: var(--font-body-en);
+      font-size: 10px;
+      letter-spacing: 0.04em;
+      word-break: break-all;
+      opacity: 0;
+      transition: opacity var(--dur-fast) var(--ease-stately);
+      z-index: 2;
+    }
+    .thumb:hover .name { opacity: 1; }
+
+    /* Work form (right rail) */
+    .empty-hint {
+      color: var(--ink-70);
+      font-family: var(--font-body-tc);
+      font-style: italic;
+      font-size: 14px;
+      margin: var(--s-2) 0 0;
+    }
+    .muted { color: var(--ink-40); font-size: 12px; max-width: none; }
+
+    .field { margin-bottom: var(--s-5); }
+    .field > label, .palette-group-label {
+      display: block;
+      font-family: var(--font-body-en);
+      font-size: 10px;
+      letter-spacing: var(--tr-caps);
+      text-transform: uppercase;
+      color: var(--bark);
+      margin-bottom: var(--s-2);
+    }
+    .field input, .field textarea {
+      width: 100%;
+      padding: var(--s-2) 0;
+      font-family: var(--font-body-tc);
+      font-size: 15px;
+      color: var(--ink);
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--ink-20);
+      border-radius: 0;
+      transition: border-color var(--dur-fast) var(--ease-stately);
+    }
+    .field input:focus, .field textarea:focus {
+      outline: none;
+      border-bottom-color: var(--bark);
+    }
+    .field textarea {
+      resize: vertical;
+      min-height: 6rem;
+      line-height: var(--lh-tc-body);
+    }
+
+    .work-tags { display: flex; flex-wrap: wrap; gap: var(--s-1); min-height: 1.6rem; }
+    .work-tag {
+      padding: 3px 10px;
+      font-family: var(--font-body-tc);
+      font-size: 12px;
+      background: var(--ink);
+      color: var(--white);
+      border-radius: 0;
+      display: inline-flex; align-items: center; gap: var(--s-1);
+    }
+    .work-tag .remove {
+      cursor: pointer;
+      opacity: 0.7;
+      font-family: var(--font-body-en);
+      transition: opacity var(--dur-fast) var(--ease-stately);
+    }
+    .work-tag .remove:hover { opacity: 1; }
+    .work-tag.auto {
+      background: transparent;
+      color: var(--ink-70);
+      border: 1px solid var(--ink-20);
+    }
+
+    details summary {
+      font-family: var(--font-body-en);
+      font-size: 10px;
+      letter-spacing: var(--tr-caps);
+      text-transform: uppercase;
+      color: var(--bark);
+      cursor: pointer;
+      user-select: none;
+      padding: var(--s-2) 0;
+      list-style: none;
+    }
+    details summary::-webkit-details-marker { display: none; }
+    details summary::before {
+      content: '+ ';
+      font-family: var(--font-body-en);
+      color: var(--ink-40);
+    }
+    details[open] summary::before { content: '− '; }
+
+    .img-alt-list { display: flex; flex-direction: column; gap: var(--s-3); max-height: 30rem; overflow-y: auto; margin-top: var(--s-3); padding-right: var(--s-1); }
+    .img-alt-row { display: grid; grid-template-columns: 52px 1fr; gap: var(--s-3); align-items: center; }
+    .img-alt-thumb { position: relative; width: 52px; height: 52px; }
+    .img-alt-thumb img, .no-thumb-mini {
+      width: 52px; height: 52px; object-fit: cover;
+      background: var(--linen);
+    }
+    .no-thumb-mini { background: repeating-linear-gradient(45deg, var(--linen) 0 4px, var(--white) 4px 8px); }
+    .img-alt-idx {
+      position: absolute; top: 0; left: 0;
+      font-family: var(--font-body-en);
+      font-size: 10px;
+      padding: 1px 4px;
+      background: var(--ink);
+      color: var(--white);
+      letter-spacing: 0.04em;
+    }
+    .img-alt-row input { padding: var(--s-2) 0; font-size: 13px; }
+
+    .publish-btn {
+      width: 100%;
+      padding: 14px;
+      margin-top: var(--s-5);
+      background: var(--ink);
+      color: var(--white);
+      border: none;
+      border-radius: 0;
+      cursor: pointer;
+      font-family: var(--font-body-en);
+      font-size: 13px;
+      letter-spacing: var(--tr-caps-tight);
+      text-transform: uppercase;
+      font-weight: 500;
+      transition: background var(--dur-fast) var(--ease-stately);
+    }
+    .publish-btn:hover:not(:disabled) { background: var(--bark); }
+    .publish-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .empty-state {
+      padding: var(--s-4);
+      background: var(--linen);
+      border: 1px solid var(--ink-10);
+      color: var(--ink-70);
+      font-family: var(--font-body-tc);
+      line-height: 1.65;
+    }
+    .empty-state strong {
+      display: block;
+      margin-bottom: var(--s-2);
+      color: var(--ink);
+      font-weight: 500;
+    }
+    .empty-state p { margin: 0; max-width: none; }
+
+    .publish-result {
+      margin-top: var(--s-4);
+      padding: var(--s-3);
+      border: 1px solid var(--bark);
+      background: var(--linen);
+      font-family: var(--font-body-tc);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .publish-result a {
+      display: inline-block;
+      margin-top: var(--s-2);
+      background-image: none;
+      color: var(--bark);
+      font-weight: 500;
+    }
+
+    @media (max-width: 1180px) {
+      main { padding: var(--s-4); }
+      .layout { grid-template-columns: 220px minmax(0, 1fr); }
+      .rail-work { grid-column: 1 / -1; position: static; max-height: none; }
+      .workflow { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 760px) {
+      .topbar, .canvas-head, .canvas-tools {
+        align-items: stretch;
+        flex-direction: column;
+      }
+      .topbar__brand { align-items: flex-start; }
+      .topbar__right { justify-content: flex-start; }
+      .layout { grid-template-columns: 1fr; }
+      .rail { position: static; max-height: none; }
+      .search-field--inline { min-width: 0; }
+      .selection-help { text-align: left; }
+    }
+
+    /* Staggered palette entrance — opacity only, brand-compliant */
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes select-flash {
+      from { opacity: 0.8; transform: scale(0.96); }
+      to { opacity: 0; transform: scale(1.04); }
+    }
+    .palette-group {
+      animation: fade-in var(--dur-base) var(--ease-stately) both;
+    }
+    .palette-group:nth-child(1) { animation-delay: 80ms; }
+    .palette-group:nth-child(2) { animation-delay: 160ms; }
+    .palette-group:nth-child(3) { animation-delay: 240ms; }
+    .palette-group:nth-child(4) { animation-delay: 320ms; }
+  </style>
+
+  <script>
+    type Folder = { name: string; count: number; thumbsAvailable: boolean };
+    type ImageInfo = { name: string; thumbUrl: string | null; sourcePath: string };
+    type Tag = { slug: string; name: string; group: string; description?: string };
+
+    const state = {
+      folders: [] as Folder[],
+      tags: [] as Tag[],
+      tagBySlug: new Map<string, Tag>(),
+      currentFolder: null as string | null,
+      images: [] as ImageInfo[],
+      selected: new Set<string>(),
+      imageTags: new Map<string, Set<string>>(),   // imageName -> tagSlugs
+      imageAlt: new Map<string, string>(),         // imageName -> alt/caption
+      workDraft: null as null | { title: string; subtitle: string; story: string; extraTags: Set<string> },
+      folderFilter: '',
+      imageFilter: '',
+      lastPublishedSlug: null as string | null,
+    };
+
+    const $ = <T extends Element>(s: string) => document.querySelector<T>(s)!;
+
+    async function init() {
+      try {
+        const [foldersRes, tagsRes] = await Promise.all([
+          fetch('/api/admin/sources'),
+          fetch('/api/admin/tags'),
+        ]);
+        state.folders = await foldersRes.json();
+        state.tags = await tagsRes.json();
+        for (const t of state.tags) state.tagBySlug.set(t.slug, t);
+        renderPalette();
+        renderFolderList();
+        updateActionsUI();
+        $('#status').textContent = `已讀取 ${state.folders.length} 個資料夾, ${state.tags.length} 個標籤`;
+      } catch (e) {
+        $('#status').textContent = `載入失敗:${(e as Error).message}`;
+      }
+    }
+
+    function renderPalette() {
+      const groups = ['form', 'scene', 'occasion', 'kind'];
+      const labels: Record<string, string> = { form: 'Form', scene: 'Scene', occasion: 'Occasion', kind: 'Kind' };
+      const html = groups.map(g => {
+        const items = state.tags.filter(t => t.group === g);
+        if (items.length === 0) return '';
+        return `
+          <div class="palette-group">
+            <span class="palette-group-label">${labels[g] || g}</span>
+            <div class="palette-chips">
+              ${items.map(t => `<button class="chip" draggable="true" data-tag="${t.slug}" data-group="${t.group}" title="${escapeHtml(t.description || '')}">${escapeHtml(t.name)}</button>`).join('')}
+            </div>
+          </div>`;
+      }).join('');
+      $('#palette-groups').innerHTML = html;
+      document.querySelectorAll<HTMLButtonElement>('.chip[data-tag]').forEach(chip => {
+        chip.addEventListener('dragstart', e => {
+          chip.classList.add('dragging');
+          e.dataTransfer!.setData('text/x-tag', chip.dataset.tag!);
+          e.dataTransfer!.effectAllowed = 'copy';
+          document.querySelectorAll('.thumb').forEach(t => t.classList.add('drop-ready'));
+        });
+        chip.addEventListener('dragend', () => {
+          chip.classList.remove('dragging');
+          document.querySelectorAll('.thumb').forEach(t => t.classList.remove('drop-ready', 'drop-target'));
+        });
+        chip.addEventListener('click', () => {
+          if (!state.workDraft) {
+            $('#status').textContent = '先建立作品(選圖→按「建立作品」)再點 palette 直接加標籤';
+            return;
+          }
+          const slug = chip.dataset.tag!;
+          if (state.workDraft.extraTags.has(slug)) state.workDraft.extraTags.delete(slug);
+          else state.workDraft.extraTags.add(slug);
+          renderWorkForm();
+        });
+      });
+    }
+
+    function renderFolderList() {
+      const ul = $('#folder-list');
+      const folders = filteredFolders();
+      if (folders.length === 0) {
+        ul.innerHTML = `<li class="folder-empty">找不到符合「${escapeHtml(state.folderFilter)}」的資料夾。</li>`;
+        return;
+      }
+      ul.innerHTML = folders.map(f => `
+        <li>
+          <button data-folder="${escapeHtml(f.name)}" ${f.count === 0 ? 'disabled' : ''}>
+            <span class="folder-name">${escapeHtml(f.name)}</span>
+            <span class="count">${f.count || 'empty'}${f.thumbsAvailable ? '' : ' no thumbs'}</span>
+          </button>
+        </li>`).join('');
+      ul.querySelectorAll<HTMLButtonElement>('button[data-folder]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.folder === state.currentFolder);
+        btn.addEventListener('click', () => loadFolder(btn.dataset.folder!));
+      });
+    }
+
+    async function loadFolder(name: string) {
+      state.currentFolder = name;
+      state.selected.clear();
+      state.imageTags.clear();
+      state.imageAlt.clear();
+      state.workDraft = null;
+      state.lastPublishedSlug = null;
+      state.imageFilter = '';
+      ($('#image-search') as HTMLInputElement).value = '';
+      renderFolderList();
+      $('#current-folder').textContent = name;
+      $('#grid').innerHTML = Array.from({ length: 12 }).map(() => '<div class="thumb thumb--loading"><div class="no-thumb-placeholder"></div></div>').join('');
+      renderWorkForm();
+      updateActionsUI();
+      $('#status').textContent = '載入縮圖中';
+      const res = await fetch('/api/admin/folder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        $('#grid').innerHTML = `<div class="canvas-empty"><p class="display-empty"><em>載入失敗:${err.error || res.status}</em></p></div>`;
+        updateActionsUI();
+        return;
+      }
+      state.images = await res.json();
+      $('#status').textContent = `已載入 ${state.images.length} 張照片`;
+      renderGrid();
+      updateActionsUI();
+    }
+
+    function renderGrid() {
+      const grid = $('#grid');
+      if (!state.currentFolder) {
+        grid.innerHTML = `<div class="canvas-empty"><p class="display-empty"><em>請於左側選一個資料夾。</em></p></div>`;
+        return;
+      }
+      if (state.images.length === 0) {
+        grid.innerHTML = `<div class="canvas-empty"><p class="display-empty"><em>此資料夾為空。</em></p></div>`;
+        return;
+      }
+      const images = visibleImages();
+      if (images.length === 0) {
+        grid.innerHTML = `<div class="canvas-empty"><p class="display-empty"><em>沒有符合搜尋的照片。</em></p></div>`;
+        return;
+      }
+      grid.innerHTML = images.map(img => `
+        <div class="thumb ${img.thumbUrl ? '' : 'no-thumb'} ${state.selected.has(img.name) ? 'selected' : ''}" data-name="${escapeHtml(img.name)}">
+          ${img.thumbUrl ? `<img src="${img.thumbUrl}" loading="lazy" alt="">` : '<div class="no-thumb-placeholder"></div>'}
+          <span class="badge"></span>
+          <div class="img-tags"></div>
+          <span class="name">${escapeHtml(img.name)}</span>
+        </div>`).join('');
+
+      grid.querySelectorAll<HTMLElement>('.thumb').forEach(el => {
+        const name = el.dataset.name!;
+        el.addEventListener('click', (e) => {
+          // ignore clicks on tag pills inside the thumb
+          if ((e.target as HTMLElement).classList.contains('img-tag')) return;
+          if (state.selected.has(name)) state.selected.delete(name);
+          else state.selected.add(name);
+          el.classList.toggle('selected');
+          updateBadges();
+          updateActionsUI();
+          renderWorkForm();
+        });
+
+        el.addEventListener('dragover', e => {
+          if (!e.dataTransfer?.types.includes('text/x-tag')) return;
+          e.preventDefault();
+          el.classList.add('drop-target');
+        });
+        el.addEventListener('dragleave', () => el.classList.remove('drop-target'));
+        el.addEventListener('drop', e => {
+          e.preventDefault();
+          el.classList.remove('drop-target');
+          const slug = e.dataTransfer!.getData('text/x-tag');
+          if (!slug) return;
+          // If the drop target is selected, apply to all selected. Else apply only to it.
+          const targets = state.selected.has(name) && state.selected.size > 0
+            ? Array.from(state.selected)
+            : [name];
+          for (const n of targets) addTagToImage(n, slug);
+          updateThumbTagPills();
+          renderWorkForm();
+        });
+      });
+      updateBadges();
+      updateThumbTagPills();
+    }
+
+    function addTagToImage(imgName: string, slug: string) {
+      if (!state.imageTags.has(imgName)) state.imageTags.set(imgName, new Set());
+      state.imageTags.get(imgName)!.add(slug);
+    }
+    function removeTagFromImage(imgName: string, slug: string) {
+      state.imageTags.get(imgName)?.delete(slug);
+    }
+
+    function updateThumbTagPills() {
+      document.querySelectorAll<HTMLElement>('.thumb').forEach(el => {
+        const name = el.dataset.name!;
+        const tags = state.imageTags.get(name);
+        const wrap = el.querySelector('.img-tags')!;
+        if (!tags || tags.size === 0) { wrap.innerHTML = ''; return; }
+        wrap.innerHTML = Array.from(tags).map(slug => {
+          const t = state.tagBySlug.get(slug);
+          return `<span class="img-tag" data-tag="${slug}" data-img="${escapeHtml(name)}" title="點擊移除">${escapeHtml(t?.name || slug)}</span>`;
+        }).join('');
+        wrap.querySelectorAll<HTMLElement>('.img-tag').forEach(pill => {
+          pill.addEventListener('click', (e) => {
+            e.stopPropagation();
+            removeTagFromImage(pill.dataset.img!, pill.dataset.tag!);
+            updateThumbTagPills();
+            renderWorkForm();
+          });
+        });
+      });
+    }
+
+    function updateBadges() {
+      const ordered = Array.from(state.selected);
+      document.querySelectorAll<HTMLElement>('.thumb').forEach(el => {
+        const name = el.dataset.name!;
+        const idx = ordered.indexOf(name);
+        const badge = el.querySelector('.badge')!;
+        if (idx >= 0) badge.textContent = String(idx + 1);
+      });
+    }
+
+    function updateActionsUI() {
+      const n = state.selected.size;
+      const visibleCount = visibleImages().length;
+      const taggedCount = Array.from(state.imageTags.values()).filter(tags => tags.size > 0).length;
+      $('#status').textContent = state.currentFolder ? `已選 ${n} / ${state.images.length}` : `${state.folders.length} 個資料夾`;
+      $('#canvas-stats').innerHTML = state.currentFolder
+        ? `<span>${state.images.length} 張照片</span><span>${visibleCount} 張顯示中</span><span>${n} 張已選</span><span>${taggedCount} 張已標籤</span>`
+        : '<span>尚未選擇資料夾</span>';
+      $('#selection-help').textContent = n > 0
+        ? `已選 ${n} 張。第 1 張會成為作品封面；再次點擊可取消。`
+        : '點照片加入作品。選取順序會成為發佈順序，第 1 張是封面。';
+      ($('#btn-new-work') as HTMLButtonElement).disabled = n === 0;
+      ($('#btn-select-all') as HTMLButtonElement).disabled = visibleCount === 0;
+      ($('#btn-select-none') as HTMLButtonElement).disabled = n === 0;
+      setWorkflow();
+    }
+
+    $('#btn-select-all').addEventListener('click', () => {
+      visibleImages().forEach(i => state.selected.add(i.name));
+      document.querySelectorAll('.thumb').forEach(el => el.classList.add('selected'));
+      updateBadges(); updateActionsUI(); renderWorkForm();
+    });
+    $('#btn-select-none').addEventListener('click', () => {
+      state.selected.clear();
+      document.querySelectorAll('.thumb').forEach(el => el.classList.remove('selected'));
+      updateBadges(); updateActionsUI(); renderWorkForm();
+    });
+
+    $('#btn-new-work').addEventListener('click', () => {
+      const guessTitle = (state.currentFolder || '').replace(/^\d{8}_(OK_)?/, '').replace(/_/g, ' ');
+      state.workDraft = { title: guessTitle, subtitle: '', story: '', extraTags: new Set() };
+      state.lastPublishedSlug = null;
+      renderWorkForm();
+      updateActionsUI();
+      ($('#f-title') as HTMLInputElement | null)?.focus();
+    });
+
+    $('#folder-search').addEventListener('input', (e) => {
+      state.folderFilter = (e.target as HTMLInputElement).value.trim().toLowerCase();
+      renderFolderList();
+    });
+
+    $('#image-search').addEventListener('input', (e) => {
+      state.imageFilter = (e.target as HTMLInputElement).value.trim().toLowerCase();
+      renderGrid();
+      updateActionsUI();
+    });
+
+    function collectUnionTags(): Set<string> {
+      const u = new Set<string>();
+      for (const imgName of state.selected) {
+        const tags = state.imageTags.get(imgName);
+        if (tags) for (const t of tags) u.add(t);
+      }
+      return u;
+    }
+
+    function renderWorkForm() {
+      const form = $('#work-form');
+      if (!state.workDraft) {
+        const hint = state.selected.size > 0
+          ? `已選 ${state.selected.size} 張照片。按上方「建立作品」開始填寫標題與內文。`
+          : '先在中間選照片，再按「建立作品」。右側會出現標題、內文、標籤與每張圖的 alt 欄位。';
+        const published = state.lastPublishedSlug
+          ? `<div class="publish-result">作品已發佈。<br><a href="/works/${encodeURIComponent(state.lastPublishedSlug)}" target="_blank" rel="noreferrer">開啟作品頁</a></div>`
+          : '';
+        form.innerHTML = `<div class="empty-state"><strong>尚未建立作品草稿</strong><p>${hint}</p></div>${published}`;
+        return;
+      }
+      const d = state.workDraft;
+      const autoTags = collectUnionTags();
+      const finalTags = new Set([...autoTags, ...d.extraTags]);
+      const selectedOrdered = Array.from(state.selected);
+      form.innerHTML = `
+        <div class="field">
+          <label>作品名稱 *</label>
+          <input id="f-title" value="${escapeHtml(d.title)}" placeholder="例:蓉欣畢業花束">
+        </div>
+        <div class="field">
+          <label>副標 / 一句話(可選)</label>
+          <input id="f-subtitle" value="${escapeHtml(d.subtitle)}" placeholder="例:第一束送給自己的花">
+        </div>
+        <div class="field">
+          <label>故事 / 說明</label>
+          <textarea id="f-story" rows="5" placeholder="說明這束花的場合、客戶背景、設計概念、用花選擇等。會成為作品頁的主文。支援 Markdown。">${escapeHtml(d.story)}</textarea>
+          <p class="muted" style="margin-top:0.3rem;font-size:0.7rem;">空白也可以。發佈後仍可在 .md 檔內編輯。</p>
+        </div>
+        <div class="field">
+          <label>作品標籤 (含 ${autoTags.size} 個從圖片彙整,${d.extraTags.size} 個額外)</label>
+          <div class="work-tags" id="work-tags">
+            ${Array.from(finalTags).map(slug => {
+              const t = state.tagBySlug.get(slug);
+              const isAuto = autoTags.has(slug) && !d.extraTags.has(slug);
+              return `<span class="work-tag ${isAuto ? 'auto' : ''}" data-tag="${slug}">${escapeHtml(t?.name || slug)}${isAuto ? '' : ' <span class="remove" data-action="remove">×</span>'}</span>`;
+            }).join('') || '<span class="muted" style="font-size:0.75rem;">尚未加任何標籤</span>'}
+          </div>
+          <p class="muted" style="margin-top:0.4rem;font-size:0.7rem;">深色 = 額外加上(點 × 移除)。淺色 = 從圖片彙整(點圖上膠囊移除)。點 palette 標籤可直接加 extra。</p>
+        </div>
+        <details class="field" ${selectedOrdered.length > 0 ? 'open' : ''}>
+          <summary>各張圖片的 alt / 註解(${selectedOrdered.length} 張)</summary>
+          <p class="muted" style="font-size:0.7rem; margin: 0.3rem 0 0.5rem;">用於無障礙與 SEO。留白會用作品名稱代入。第 1 張會是 hero。</p>
+          <div class="img-alt-list">
+            ${selectedOrdered.map((n, i) => {
+              const img = state.images.find(x => x.name === n);
+              const alt = state.imageAlt.get(n) || '';
+              return `
+                <div class="img-alt-row">
+                  <div class="img-alt-thumb">
+                    ${img?.thumbUrl ? `<img src="${img.thumbUrl}" alt="">` : '<div class="no-thumb-mini"></div>'}
+                    <span class="img-alt-idx">${i + 1}${i === 0 ? ' · hero' : ''}</span>
+                  </div>
+                  <input class="f-img-alt" data-img="${escapeHtml(n)}" value="${escapeHtml(alt)}" placeholder="例:純白鬱金香側面特寫">
+                </div>`;
+            }).join('')}
+          </div>
+        </details>
+        <button class="publish-btn" id="btn-publish" ${state.selected.size === 0 ? 'disabled' : ''}>發佈作品</button>`;
+
+      ($('#f-title') as HTMLInputElement).addEventListener('input', e => { d.title = (e.target as HTMLInputElement).value; });
+      ($('#f-subtitle') as HTMLInputElement).addEventListener('input', e => { d.subtitle = (e.target as HTMLInputElement).value; });
+      ($('#f-story') as HTMLTextAreaElement).addEventListener('input', e => { d.story = (e.target as HTMLTextAreaElement).value; });
+      form.querySelectorAll<HTMLInputElement>('.f-img-alt').forEach(inp => {
+        inp.addEventListener('input', () => state.imageAlt.set(inp.dataset.img!, inp.value));
+      });
+      form.querySelectorAll<HTMLElement>('.work-tag .remove').forEach(x => {
+        x.addEventListener('click', () => {
+          const slug = (x.closest('.work-tag') as HTMLElement).dataset.tag!;
+          d.extraTags.delete(slug);
+          renderWorkForm();
+        });
+      });
+      form.querySelector('#btn-publish')!.addEventListener('click', () => publishWork());
+    }
+
+    async function publishWork() {
+      if (!state.workDraft) return;
+      const d = state.workDraft;
+      if (state.selected.size === 0) { $('#status').textContent = '請先選擇照片'; return; }
+      if (!d.title.trim()) { $('#status').textContent = '請填寫作品標題'; ($('#f-title') as HTMLInputElement).focus(); return; }
+
+      const btn = $('#btn-publish') as HTMLButtonElement;
+      btn.disabled = true; btn.textContent = '發佈中, 正在產生圖片版本';
+      $('#status').textContent = '發佈中';
+
+      const selectedOrdered = Array.from(state.selected);   // selection order = order
+      const images = selectedOrdered.map(name => {
+        const img = state.images.find(i => i.name === name)!;
+        return {
+          sourcePath: img.sourcePath,
+          name,
+          alt: state.imageAlt.get(name) || '',
+          tags: Array.from(state.imageTags.get(name) || []),
+        };
+      });
+
+      try {
+        const res = await fetch('/api/admin/publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: d.title,
+            subtitle: d.subtitle,
+            story: d.story,
+            folderName: state.currentFolder,
+            tags: Array.from(d.extraTags),
+            heroIndex: 0,
+            images,
+          }),
+        });
+        const result = await res.json();
+        if (!res.ok || !result.ok) throw new Error(result.error || `HTTP ${res.status}`);
+
+        state.lastPublishedSlug = result.slug;
+        $('#status').textContent = `已發佈 ${result.imageCount} 張照片, ${result.variantCount} 個圖片版本`;
+        state.selected.clear();
+        state.imageTags.clear();
+        state.imageAlt.clear();
+        state.workDraft = null;
+        renderGrid();
+        renderWorkForm();
+        updateActionsUI();
+        $('#status').textContent = `已發佈 ${result.imageCount} 張照片, ${result.variantCount} 個圖片版本`;
+      } catch (e) {
+        btn.disabled = false; btn.textContent = '發佈作品';
+        $('#status').textContent = '發佈失敗:' + (e as Error).message;
+      }
+    }
+
+    function setWorkflow() {
+      const active = state.workDraft ? 'publish' : state.currentFolder ? 'select' : 'folder';
+      document.querySelectorAll<HTMLElement>('.workflow-step').forEach(step => {
+        step.classList.toggle('is-active', step.dataset.step === active);
+      });
+    }
+
+    function filteredFolders() {
+      if (!state.folderFilter) return state.folders;
+      return state.folders.filter(folder => folder.name.toLowerCase().includes(state.folderFilter));
+    }
+
+    function visibleImages() {
+      if (!state.imageFilter) return state.images;
+      return state.images.filter(image => image.name.toLowerCase().includes(state.imageFilter));
+    }
+
+    function escapeHtml(s: string) { return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]!)); }
+
+    init();
+  </script>
+</BaseLayout>

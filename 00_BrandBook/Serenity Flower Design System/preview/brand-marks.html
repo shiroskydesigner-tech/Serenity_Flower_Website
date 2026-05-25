@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Marks · monograms</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  .card { padding: 28px 36px; gap: 12px; background: #D8BE99; }
+  body { background: #D8BE99; }
+  .marks { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 24px; align-items: stretch; }
+  .slot { display: flex; flex-direction: column; gap: 12px; align-items: center; justify-content: center; padding: 18px; background: #F0F0F0; border: 1px solid var(--ink-10); }
+  .slot.primary { padding: 14px; }
+  .slot.primary img { width: auto; height: 200px; display: block; }
+  .slot img { width: 84px; height: 84px; display: block; }
+  .slot .name { font-family: var(--font-body-en); font-size: 10px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--bark); }
+  .caption { font-family: var(--font-body-en); font-size: 12px; color: var(--ink-70); margin-top: 4px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="marks">
+      <div class="slot primary"><img src="../assets/logo-primary.png" alt="Primary logo"><span class="name">Primary · Oval</span></div>
+      <div class="slot"><img src="../assets/monogram-sf.svg" alt="SF monogram"><span class="name">SF Monogram</span></div>
+      <div class="slot"><img src="../assets/mark-hua.svg" alt="花 mark"><span class="name">花</span></div>
+    </div>
+    <p class="caption">Primary oval lockup is the canonical mark — line-drawn tulip, &laquo;Floral · Designs&raquo;, <em>Serenity – Flower –</em>, and 靜謐花間. SF for tight digital contexts; 花 for CJK-only collateral.</p>
+  </div>
+</body>
+</html>

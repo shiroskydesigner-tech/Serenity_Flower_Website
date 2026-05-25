@@ -1,0 +1,850 @@
+---
+/**
+ * 首頁（/）
+ * ─────────────────────────────────────────────────
+ * 區塊組成：Hero 輪播（5 張，5 秒切換）→ Manifesto 宣言 → Services 三服務 → Recent Works 最新 6 件作品
+ *
+ * Hero 輪播資料來源：
+ *   ▸ 文字 → public/news/news.md（每張用 --- 分隔）
+ *   ▸ 圖片 → public/news/01.jpg ~ 05.jpg（或 news.md 內 image: 欄位指定）
+ *   ▸ 改文字 / 換圖：編輯 public/news/ 內檔案，存檔即更新
+ *
+ * 怎麼設定：
+ *   ▸ 改輪播間隔 → 找下方 const INTERVAL_MS = 2000（毫秒）
+ *   ▸ 改淡入淡出時長 → 找 .hero__slide { transition: opacity 0.6s ease }
+ *   ▸ 改 hero 圖比例 → 下方 .hero__image { aspect-ratio: 4 / 5.4 }
+ *   ▸ 改宣言文字 → 改 .manifesto__statement 與 .manifesto__tc 的內容
+ *   ▸ 改三服務介紹 → 改下方 <ol class="services__grid"> 內的 <li>
+ *   ▸ 改最新作品顯示數量 → 改下方 .slice(0, 6)
+ */
+import SitePage from '../components/SitePage.astro';
+import EyebrowRule from '../components/EyebrowRule.astro';
+import { getCollection } from 'astro:content';
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+
+// ─── Hero 輪播：讀取 public/news/news.md 解析 5 張幻燈片 ───────
+const INTERVAL_MS = 5000;          // 輪播間隔（毫秒）— 改這裡可調速度
+const newsDir = join(process.cwd(), 'public', 'news');
+const newsPath = join(newsDir, 'news.md');
+
+type Slide = {
+  image: string;
+  imageExists: boolean;
+  title?: string;
+  titleTc?: string;
+  subtitle?: string;
+  imageAlt?: string;
+  cta?: string;
+  ctaHref?: string;
+  body?: string;
+};
+
+function parseNewsMd(raw: string): Slide[] {
+  // 去掉 # 開頭的註解行，依 --- 分隔成多段
+  const stripped = raw
+    .split('\n')
+    .filter(l => !l.trimStart().startsWith('#'))
+    .join('\n');
+  return stripped
+    .split(/^---\s*$/m)
+    .map(b => b.trim())
+    .filter(Boolean)
+    .map(block => {
+      const slide: any = {};
+      const bodyLines: string[] = [];
+      let inBody = false;
+      for (const line of block.split('\n')) {
+        if (inBody) { bodyLines.push(line); continue; }
+        if (line.trim() === '') { inBody = true; continue; }
+        const m = line.match(/^([A-Za-z][A-Za-z0-9]*):\s*(.*)$/);
+        if (m) slide[m[1]] = m[2].trim();
+        else bodyLines.push(line);  // safety
+      }
+      slide.body = bodyLines.join('\n').trim();
+      return slide as Slide;
+    });
+}
+
+let slides: Slide[] = [];
+if (existsSync(newsPath)) {
+  try {
+    const raw = readFileSync(newsPath, 'utf-8');
+    slides = parseNewsMd(raw).map(s => ({
+      ...s,
+      imageExists: s.image ? existsSync(join(newsDir, s.image)) : false,
+    }));
+  } catch (e) {
+    console.warn('[news slider] 解析 public/news/news.md 失敗：', e);
+  }
+}
+// 開發提示：列出實際可用的圖檔
+if (import.meta.env.DEV && slides.length === 0) {
+  console.warn('[news slider] 沒有可用幻燈片 — 請檢查 public/news/news.md 是否存在');
+}
+
+const works = (await getCollection('works', ({ data }) =>
+  import.meta.env.DEV ? true : data.status === 'published'
+))
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .slice(0, 6);
+
+function heroImg(work: typeof works[number]) {
+  return work.data.images.find(i => i.id === work.data.hero) || work.data.images[0];
+}
+function srcset(variants: any[], format: 'webp' | 'avif') {
+  return variants.filter(v => v.format === format).map(v => `${v.src} ${v.width}w`).join(', ');
+}
+---
+<SitePage
+  title="SERENITY FLOWER · 靜謐花間"
+  description="Taiwanese floral atelier for installation art, wedding design, and seasonal florals."
+  active="News"
+>
+  <section
+    class="hero hero--slider"
+    data-news-hero
+    data-interval={INTERVAL_MS}
+    aria-roledescription="輪播"
+    aria-label="最新消息"
+  >
+    {slides.length > 0 ? (
+      <>
+        <div class="hero__copy hero__stack">
+          {slides.map((s, i) => (
+            <article
+              class="hero__slide"
+              data-slide-index={i}
+              data-state={i === 0 ? 'active' : undefined}
+              aria-hidden={i === 0 ? 'false' : 'true'}
+            >
+              {s.subtitle && <EyebrowRule en={s.subtitle} />}
+              <h1 class="hero__display">
+                {s.title}
+                {s.titleTc && <><br /><em>{s.titleTc}</em></>}
+              </h1>
+              {s.body && (
+                <p class="hero__lead">{s.body.split('\n').map((ln, k, arr) => (
+                  <>{ln}{k < arr.length - 1 && <br />}</>
+                ))}</p>
+              )}
+              {s.cta && s.ctaHref && (
+                <div class="hero__actions">
+                  <a href={s.ctaHref} class="btn btn--primary">{s.cta} <span aria-hidden="true">→</span></a>
+                </div>
+              )}
+            </article>
+          ))}
+        </div>
+
+        <figure class="hero__figure">
+          <div class="hero__image hero__stack">
+            {slides.map((s, i) => (
+              s.imageExists ? (
+                <img
+                  src={`/news/${s.image}`}
+                  alt={s.imageAlt || s.titleTc || s.title || ''}
+                  data-slide-index={i}
+                  data-state={i === 0 ? 'active' : undefined}
+                  loading={i === 0 ? 'eager' : 'lazy'}
+                  decoding={i === 0 ? 'sync' : 'async'}
+                  fetchpriority={i === 0 ? 'high' : 'auto'}
+                />
+              ) : (
+                <div
+                  class="hero__image-missing"
+                  data-slide-index={i}
+                  data-state={i === 0 ? 'active' : undefined}
+                  aria-hidden="true"
+                >
+                  <span>缺少圖檔<br/><code>public/news/{s.image}</code></span>
+                </div>
+              )
+            ))}
+          </div>
+          <figcaption class="hero__caption">
+            <div class="hero__dots" role="tablist" aria-label="輪播導覽">
+              {slides.map((_, i) => (
+                <button
+                  type="button"
+                  class="hero__dot"
+                  data-slide-index={i}
+                  role="tab"
+                  aria-label={`切換到第 ${i + 1} 張`}
+                  aria-selected={i === 0 ? 'true' : 'false'}
+                />
+              ))}
+            </div>
+          </figcaption>
+        </figure>
+      </>
+    ) : (
+      <div class="hero__copy">
+        <EyebrowRule en="Setup · 設定中" />
+        <h1 class="hero__display">News slider not configured</h1>
+        <p class="hero__lead">
+          請在 <code>public/news/news.md</code> 加入幻燈片內容，並把對應圖片放到同一資料夾。
+        </p>
+      </div>
+    )}
+  </section>
+
+  {slides.length > 1 && (
+    <script is:inline>
+      (() => {
+        const root = document.querySelector('[data-news-hero]');
+        if (!root) return;
+        const interval = Number(root.dataset.interval) || 2000;
+        const textSlides = root.querySelectorAll('.hero__slide');
+        const images = root.querySelectorAll('.hero__image > [data-slide-index]');
+        const dots = root.querySelectorAll('.hero__dot');
+        const count = textSlides.length;
+        if (count <= 1) return;
+
+        // 尊重 reduced motion：不啟動自動輪播，但保留手動切換
+        const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        const ANIM_MS = 500;   // 對應 CSS animation 時長（單向）
+        let current = 0;
+        let timer = null;
+        let paused = false;
+
+        function go(nextIndex) {
+          const prev = current;
+          current = ((nextIndex % count) + count) % count;
+          if (prev === current) return;
+
+          // 序列式（滑出再滑進）：
+          //   Phase 1 (0 ~ ANIM_MS)：舊 slide 向外滑出
+          //   Phase 2 (ANIM_MS ~ 2×ANIM_MS)：新 slide 從外滑入
+          //   兩階段不重疊，視覺乾淨
+
+          // ─ Phase 1：舊 slide → leaving（觸發滑出動畫）
+          textSlides[prev].setAttribute('data-state', 'leaving');
+          textSlides[prev].setAttribute('aria-hidden', 'true');
+          images[prev].setAttribute('data-state', 'leaving');
+
+          // dots 立刻反映新位置（即時 UI 回饋）
+          dots.forEach((el, idx) => el.setAttribute('aria-selected', String(idx === current)));
+
+          // ─ Phase 2：等 ANIM_MS 後，新 slide → active（觸發滑入動畫）+ 舊 slide 清狀態
+          setTimeout(() => {
+            // 把舊 slide 重置回預設藏匿位置（左/右邊外），下次入場才能正確
+            // if 防護：使用者快速切換時，避免把已重新 active 的元素誤清掉
+            if (textSlides[prev].getAttribute('data-state') === 'leaving') {
+              textSlides[prev].removeAttribute('data-state');
+            }
+            if (images[prev].getAttribute('data-state') === 'leaving') {
+              images[prev].removeAttribute('data-state');
+            }
+            // 啟動新 slide 入場
+            textSlides[current].setAttribute('data-state', 'active');
+            textSlides[current].setAttribute('aria-hidden', 'false');
+            images[current].setAttribute('data-state', 'active');
+          }, ANIM_MS);
+        }
+
+        function start() {
+          stop();
+          if (paused || prefersReduced) return;
+          timer = setInterval(() => go(current + 1), interval);
+        }
+        function stop() {
+          if (timer) { clearInterval(timer); timer = null; }
+        }
+
+        // 手動點圓點切換
+        dots.forEach(d => {
+          d.addEventListener('click', () => {
+            go(Number(d.dataset.slideIndex));
+            start();   // 重置計時器，給使用者完整的下一輪
+          });
+        });
+
+        // hover 暫停（a11y 最佳實踐）
+        root.addEventListener('mouseenter', () => { paused = true; stop(); });
+        root.addEventListener('mouseleave', () => { paused = false; start(); });
+
+        // 觸控暫停（手機上 hover 不會觸發）
+        root.addEventListener('touchstart', () => { paused = true; stop(); }, { passive: true });
+
+        // 鍵盤左右切換
+        root.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowLeft') { go(current - 1); start(); }
+          else if (e.key === 'ArrowRight') { go(current + 1); start(); }
+        });
+
+        // 分頁切換到背景時暫停（省電 + 避免回到分頁時跳很多張）
+        document.addEventListener('visibilitychange', () => {
+          if (document.hidden) stop();
+          else if (!paused) start();
+        });
+
+        start();
+      })();
+    </script>
+  )}
+
+  <section class="manifesto">
+    <EyebrowRule en="Manifesto" tc="宣言" />
+    <p class="manifesto__statement">
+      SERENITY FLOWER <em>rejects</em> the conventional ornament of the wedding
+      industry. We strip the object of its assumed surface, then rebuild its
+      <em> geometric volume</em> and <em>spatial skeleton</em>.
+    </p>
+    <p class="manifesto__tc">
+      我們把花材視為結構，而不是裝飾。每一件作品都從線條、重量、空隙與比例開始，
+      讓花在空間裡成為可以被閱讀的骨架。
+    </p>
+  </section>
+
+  <section class="services">
+    <EyebrowRule en="Services" tc="服務" />
+    <ol class="services__grid">
+      <li class="service">
+        <span class="service__num">01</span>
+        <h3 class="service__title">Installation Art</h3>
+        <p class="service__tc">裝置藝術</p>
+        <p class="service__lead">Sculptural objects and spatial interventions, the visual anchor of a venue.</p>
+        <a href="/installation" class="service__more">See work <span aria-hidden="true">→</span></a>
+      </li>
+      <li class="service">
+        <span class="service__num">02</span>
+        <h3 class="service__title">Wedding Design</h3>
+        <p class="service__tc">婚禮佈置</p>
+        <p class="service__lead">Architectural choreography of an event space: movement, voids, and balance.</p>
+        <a href="/wedding" class="service__more">See work <span aria-hidden="true">→</span></a>
+      </li>
+      <li class="service">
+        <span class="service__num">03</span>
+        <h3 class="service__title">Seasonal Florals</h3>
+        <p class="service__tc">節慶花禮</p>
+        <p class="service__lead">Object-scale gift work, where a single stem is treated as composition.</p>
+        <a href="/seasonal" class="service__more">See work <span aria-hidden="true">→</span></a>
+      </li>
+    </ol>
+  </section>
+
+  {works.length > 0 && (
+    <section class="works">
+      <header class="works__head">
+        <EyebrowRule en="Recent Works" tc="最近作品" />
+        <a href="/works" class="works__all">All works <span aria-hidden="true">→</span></a>
+      </header>
+      <div class="works__grid">
+        {works.map((w) => {
+          const img = heroImg(w);
+          return (
+            <article class="work">
+              <a href={`/works/${w.id}`}>
+                {img && (
+                  <figure class="work__figure">
+                    <picture>
+                      <source type="image/avif" srcset={srcset(img.variants, 'avif')} sizes="(min-width: 960px) 380px, 100vw" />
+                      <source type="image/webp" srcset={srcset(img.variants, 'webp')} sizes="(min-width: 960px) 380px, 100vw" />
+                      <img
+                        data-parallax="0.018"
+                        src={img.variants.find(v => v.format === 'webp')?.src}
+                        alt={img.alt}
+                        width={img.width}
+                        height={img.height}
+                        loading="lazy"
+                        style={`background-image: url(${img.lqip}); background-size: cover; background-position: center;`}
+                      />
+                    </picture>
+                  </figure>
+                )}
+                <h3 class="work__title">{w.data.title}</h3>
+                <p class="work__meta">
+                  <span>{w.data.date.toISOString().slice(0, 10)}</span>
+                  {w.data.status === 'draft' && <span class="work__draft">DRAFT</span>}
+                </p>
+              </a>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  )}
+
+  {works.length === 0 && import.meta.env.DEV && (
+    <section class="works empty">
+      <p class="muted">No works yet. <a href="/admin">Open /admin to curate.</a></p>
+    </section>
+  )}
+</SitePage>
+
+<style>
+  .hero {
+    padding: var(--s-6) 0 var(--s-7);     /* 96/128 → 32/48 — 整段高度減少約 144px */
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: var(--s-7);                       /* 64 → 48 — 兩欄間距收緊 */
+    align-items: center;                   /* 由 end 改 center — 更平衡，整段不易被壓扁 */
+    min-height: 0;
+  }
+  .hero__copy { display: flex; flex-direction: column; gap: var(--s-5); max-width: 540px; }
+
+  /* ─── Slider stack：把多張幻燈片疊在同一網格 cell ─── */
+  .hero__stack {
+    display: grid;
+    grid-template-areas: 'stack';
+  }
+  .hero__stack > * { grid-area: stack; }
+
+  /* ─── 文字 slide：左進右出 + 淡入淡出 ───
+     預設藏在左邊外（translateX -40px, opacity 0）
+     active → 觸發 slideInFromLeft 動畫
+     leaving → 觸發 slideOutToRight 動畫
+     forwards = 動畫結束保持終點狀態 */
+  .hero__slide {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);                       /* 32 → 16 — 文字塊內元素更緊湊 */
+    opacity: 0;
+    transform: translateX(-40px);
+    pointer-events: none;
+  }
+  .hero__slide[data-state="active"] {
+    pointer-events: auto;
+    animation: sf-slide-in-from-left 0.5s var(--ease-stately) forwards;
+  }
+  .hero__slide[data-state="leaving"] {
+    animation: sf-slide-out-to-right 0.5s var(--ease-stately) forwards;
+  }
+
+  /* ─── 輪播動畫 keyframes ─── */
+  @keyframes sf-slide-in-from-left {
+    from { opacity: 0; transform: translateX(-40px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes sf-slide-out-to-right {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(40px); }
+  }
+  @keyframes sf-slide-in-from-right {
+    from { opacity: 0; transform: translateX(40px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes sf-slide-out-to-left {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(-40px); }
+  }
+
+  .hero__display {
+    font-family: var(--font-display-en);
+    font-size: var(--fs-h1);              /* 96px → 56px — 主標題降一階 */
+    font-weight: 400;
+    line-height: var(--lh-heading);       /* 從 lh-display 改為 lh-heading 較緊湊 */
+    letter-spacing: var(--tr-display);
+    margin: 0;
+  }
+  .hero__display em {
+    font-family: var(--font-display-tc);
+    font-style: normal;
+    font-size: 0.55em;                    /* 0.72em → 0.55em — TC 副標相對更小 */
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    display: inline-block;
+    margin-top: 0.15em;
+  }
+  .hero__lead {
+    font-family: var(--font-body-tc);
+    font-size: 14px;                      /* 16 → 14 — 內文略縮 */
+    line-height: 1.75;                    /* 1.85 → 1.75 — 行高收緊 */
+    color: var(--ink);
+    max-width: 460px;
+    margin: 0;
+  }
+  .hero__actions { display: flex; gap: var(--s-5); align-items: center; }
+  .hero__figure { margin: 0; }
+  .hero__image {
+    aspect-ratio: 4 / 4;                  /* 4/5.4 → 1/1 — 改為正方，整體高度大幅降低 */
+    max-height: 60vh;                     /* 上限 60% 視窗高 — 確保不超過螢幕 */
+    width: 100%;
+    background: var(--white);
+    overflow: hidden;
+    position: relative;
+  }
+  .hero__image::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--white);
+    opacity: 0;
+    transform: scale(0.96);
+    transition: opacity 0.2s ease,
+                transform 0.2s ease,
+                inset 0.2s ease;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .hero__image:hover::after {
+    opacity: 1;
+    transform: scale(1);
+    inset: 16px;
+  }
+  .hero__image picture,
+  .hero__image img {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  /* Slider 圖片：右進左出 + 淡入淡出（與文字反方向，鏡面對向動態）
+     預設藏在右邊外（translateX +40px, opacity 0）
+     active → slideInFromRight，leaving → slideOutToLeft */
+  .hero__image > img,
+  .hero__image > .hero__image-missing {
+    object-fit: cover;
+    object-position: center;
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  .hero__image > img[data-state="active"],
+  .hero__image > .hero__image-missing[data-state="active"] {
+    animation: sf-slide-in-from-right 0.5s var(--ease-stately) forwards;
+  }
+  .hero__image > img[data-state="leaving"],
+  .hero__image > .hero__image-missing[data-state="leaving"] {
+    animation: sf-slide-out-to-left 0.5s var(--ease-stately) forwards;
+  }
+  /* 缺圖佔位（dev 提示）*/
+  .hero__image-missing {
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-family: var(--font-body-tc);
+    font-size: 13px;
+    color: var(--ink-70);
+    padding: var(--s-5);
+    line-height: 1.8;
+  }
+
+  /* ─── 減少動態 a11y fallback：拿掉位移，僅保留淡入淡出 ─── */
+  @media (prefers-reduced-motion: reduce) {
+    .hero__slide,
+    .hero__image > img,
+    .hero__image > .hero__image-missing {
+      animation: none !important;
+      transform: none !important;
+      transition: opacity 0.3s ease;
+    }
+    .hero__slide,
+    .hero__image > img,
+    .hero__image > .hero__image-missing {
+      opacity: 0;
+    }
+    .hero__slide[data-state="active"],
+    .hero__image > img[data-state="active"],
+    .hero__image > .hero__image-missing[data-state="active"] {
+      opacity: 1;
+    }
+  }
+  .hero__image-missing code {
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    color: var(--bark);
+  }
+
+  .hero__caption {
+    margin-top: var(--s-3);
+    display: flex;
+    gap: var(--s-3);
+    align-items: center;
+    font-family: var(--font-body-en);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-70);
+  }
+
+  /* ─── Slider dots（底部小圓點導覽） ─── */
+  .hero__dots {
+    display: flex;
+    gap: 10px;
+    margin-top: var(--s-3);
+    align-items: center;
+  }
+  .hero__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    border: 1px solid var(--ink-40);
+    background: transparent;
+    background-image: none;
+    padding: 0;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    /* 觸控區 ≥ 44px：用 pseudo padding 擴大 hit area，視覺仍是 6px 圓點 */
+    position: relative;
+  }
+  .hero__dot::before {
+    content: '';
+    position: absolute;
+    inset: -19px;            /* 6 + 19*2 = 44px 觸控區 */
+  }
+  .hero__dot:hover {
+    border-color: var(--ink);
+    transform: scale(1.3);
+  }
+  .hero__dot[aria-selected="true"] {
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+
+  .manifesto {
+    padding: var(--s-10) 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--s-8);
+    align-items: start;
+  }
+  .manifesto > :global(.sf-eyebrow) { grid-column: 1 / -1; }
+  .manifesto__statement {
+    font-family: var(--font-display-en);
+    font-size: var(--fs-h3);
+    line-height: 1.4;
+    color: var(--ink);
+    margin: 0;
+    max-width: none;
+  }
+  .manifesto__statement em { font-style: italic; color: var(--bark); }
+  .manifesto__tc {
+    font-family: var(--font-display-tc);
+    font-size: var(--fs-h3);
+    line-height: 1.9;
+    color: var(--ink);
+    margin: 0;
+    max-width: none;
+  }
+
+  .services { padding: var(--s-9) 0 var(--s-10); border-top: 1px solid var(--ink-10); }
+  .services__grid {
+    list-style: none;
+    padding: 0;
+    margin: var(--s-6) 0 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--s-7);
+  }
+  .service {
+    border-top: 2px solid var(--bark);
+    padding-top: var(--s-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+    position: relative;
+    transition: transform 0.2s ease;
+  }
+  .service::before {
+    content: '';
+    position: absolute;
+    top: -2px; left: 0;
+    width: 0; height: 4px;
+    background: var(--ink);
+    transition: width 0.2s ease;
+  }
+  .service:hover { transform: translateY(-4px); }
+  .service:hover::before { width: 33%; }
+  .service:hover .service__num { color: var(--ink); }
+  .service__num {
+    transition: color 0.2s ease;
+  }
+  .service__num {
+    font-family: var(--font-display-en);
+    font-size: 28px;
+    color: var(--bark);
+    line-height: 1;
+  }
+  .service__title {
+    font-family: var(--font-display-en);
+    font-size: var(--fs-h3);
+    font-weight: 400;
+    color: var(--ink);
+    margin: 0;
+  }
+  .service__tc {
+    font-family: var(--font-display-tc);
+    font-size: 16px;
+    letter-spacing: 0.05em;
+    color: var(--ink-70);
+    margin: calc(var(--s-2) * -1) 0 var(--s-2);
+    max-width: none;
+  }
+  .service__lead { font-size: var(--fs-small); color: var(--ink-70); margin: 0; line-height: 1.7; }
+  .service__more {
+    margin-top: var(--s-2);
+    font-family: var(--font-body-en);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink);
+    align-self: flex-start;
+  }
+
+  .works { padding: var(--s-9) 0 var(--s-10); border-top: 1px solid var(--ink-10); }
+  .works__head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--s-6); }
+  .works__all {
+    font-family: var(--font-body-en);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-70);
+  }
+  .works__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-7) var(--s-6); }
+  .work a { display: block; background-image: none; }
+  .work__figure {
+    margin: 0 0 var(--s-3);
+    background: var(--white);
+    overflow: hidden;
+    aspect-ratio: 1 / 1;
+    position: relative;
+  }
+  .work__figure::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--white);
+    opacity: 0;
+    transform: scale(0.94);
+    transition: opacity 0.2s ease,
+                transform 0.2s ease,
+                inset 0.2s ease;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .work__figure img {
+    --parallax-scale: 1.05;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    scale: 1;
+    transition: scale 0.2s ease, filter 0.2s ease;
+  }
+  .work a:hover .work__figure img {
+    scale: 1.08;
+    filter: contrast(1.05) saturate(1.04);
+  }
+  .work a:hover .work__figure::after {
+    opacity: 1;
+    transform: scale(1);
+    inset: 10px;
+  }
+  .work__title {
+    font-family: var(--font-display-en);
+    font-size: 24px;
+    font-weight: 400;
+    margin: 0;
+    color: var(--ink);
+    position: relative;
+    display: inline-block;
+    transition: color 0.2s ease,
+                transform 0.2s ease;
+  }
+  .work__title::after {
+    content: '';
+    position: absolute;
+    left: 0; bottom: -3px;
+    width: 0; height: 1px;
+    background: var(--bark);
+    transition: width 0.2s ease;
+  }
+  .work a:hover .work__title {
+    color: var(--bark);
+    transform: translateX(4px);
+  }
+  .work a:hover .work__title::after { width: 100%; }
+  .work__meta {
+    font-family: var(--font-body-en);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-70);
+    margin: var(--s-1) 0 0;
+    display: flex;
+    gap: var(--s-3);
+    align-items: center;
+  }
+  .work__draft {
+    padding: 2px 6px;
+    border: 1px solid var(--bark);
+    color: var(--bark);
+    font-size: 9px;
+  }
+  .empty { padding: var(--s-8) 0; text-align: center; }
+  .muted { color: var(--ink-70); font-style: italic; max-width: none; }     /* ink-40→ink-70 WCAG AA */
+
+  /* ─── Tablet ≤ 960px ─────────────────────────────── */
+  @media (max-width: 960px) {
+    .hero {
+      grid-template-columns: 1fr;
+      gap: var(--s-5);                       /* 48 → 24 — 平板上下堆疊也收緊 */
+      padding: var(--s-5) 0 var(--s-6);      /* 64/96 → 24/32 */
+    }
+    .hero__copy { max-width: none; }
+    .hero__display { font-size: 44px; }       /* 64 → 44 — 對齊新 desktop 規格 */
+    .hero__display em { font-size: 0.5em; }
+    .hero__image {
+      aspect-ratio: 16 / 9;                   /* 16/11 → 16/9 — 平板更扁，騰出空間 */
+      max-height: 50vh;
+    }
+
+    .manifesto {
+      grid-template-columns: 1fr;
+      gap: var(--s-5);
+      padding: var(--s-9) 0;
+    }
+    .manifesto__statement { font-size: 24px; }
+    .manifesto__tc { font-size: 22px; }
+
+    .services { padding: var(--s-8) 0 var(--s-9); }
+    .services__grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--s-6) var(--s-5);
+    }
+    .service:last-child { grid-column: 1 / -1; }   /* 第 3 個跨整列，避免單欄孤立 */
+
+    .works { padding: var(--s-8) 0 var(--s-9); }
+    .works__grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--s-6) var(--s-5);
+    }
+    .work__title { font-size: 21px; }
+  }
+
+  /* ─── Mobile ≤ 640px ─────────────────────────────── */
+  @media (max-width: 640px) {
+    .hero {
+      padding: var(--s-4) 0 var(--s-5);     /* 48/64 → 16/24 — 手機更精簡 */
+      gap: var(--s-4);
+    }
+    .hero__display { font-size: 36px; line-height: 1.1; }    /* 48 → 36 — 手機更收 */
+    .hero__display em { font-size: 0.5em; }
+    .hero__lead { font-size: 13px; line-height: 1.7; }
+    .hero__actions { flex-direction: column; align-items: stretch; gap: var(--s-3); }
+    .hero__actions .btn { text-align: center; padding: 12px 20px; font-size: 11px; }
+    .hero__image { aspect-ratio: 5 / 4; max-height: 45vh; }    /* 4/5 → 5/4 — 改為橫長 */
+
+    .manifesto { padding: var(--s-8) 0; gap: var(--s-4); }
+    .manifesto__statement { font-size: 21px; line-height: 1.5; }
+    .manifesto__tc { font-size: 18px; line-height: 1.8; }
+
+    .services { padding: var(--s-7) 0 var(--s-8); }
+    .services__grid { grid-template-columns: 1fr; gap: var(--s-5); }
+    .service:last-child { grid-column: 1; }
+    .service__title { font-size: 24px; }
+
+    .works { padding: var(--s-7) 0 var(--s-8); }
+    .works__head { flex-direction: column; align-items: flex-start; gap: var(--s-3); margin-bottom: var(--s-5); }
+    .works__grid { grid-template-columns: 1fr; gap: var(--s-6); }
+    .work__title { font-size: 22px; }
+  }
+</style>

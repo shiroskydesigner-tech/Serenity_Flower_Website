@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Colors · usage hierarchy</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  .card { padding: 24px 32px; gap: 16px; }
+  .bars { display: flex; flex-direction: column; gap: 10px; }
+  .bar { display: grid; grid-template-columns: 88px 1fr 70px; align-items: center; gap: 14px; }
+  .bar .lbl { font-family: var(--font-body-en); font-size: 11px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink); }
+  .bar .fill { height: 18px; border: 1px solid var(--ink-10); }
+  .bar .pct { font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: var(--ink-70); text-align: right; }
+  .head { display: flex; gap: 12px; align-items: baseline; }
+  .head .eyebrow { font-family: var(--font-body-en); font-size: 10px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--bark); }
+  .head .note { font-family: var(--font-body-en); font-size: 11px; color: var(--ink-70); }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="head"><span class="eyebrow">Tonal hierarchy</span><span class="note">— typical composition share</span></div>
+    <div class="bars">
+      <div class="bar"><span class="lbl">Linen ★</span><div class="fill" style="background:#D8BE99; width:100%"></div><span class="pct">≈ 65%</span></div>
+      <div class="bar"><span class="lbl">Cream ☆</span><div class="fill" style="background:#EEE5D6; width:24%"></div><span class="pct">≈ 18%</span></div>
+      <div class="bar"><span class="lbl">Ink</span><div class="fill" style="background:#3E2D21; width:14%"></div><span class="pct">≈ 12%</span></div>
+      <div class="bar"><span class="lbl">Bark</span><div class="fill" style="background:#89583A; width:6%"></div><span class="pct">≈ 5%</span></div>
+    </div>
+  </div>
+</body>
+</html>

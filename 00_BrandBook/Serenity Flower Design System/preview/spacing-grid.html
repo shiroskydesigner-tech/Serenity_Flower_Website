@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Layout · grid with skeleton column</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  .card { padding: 22px 28px; gap: 12px; }
+  .eyebrow { font-family: var(--font-body-en); font-size: 10px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--bark); }
+  .grid { position: relative; height: 220px; background: var(--white); border: 1px solid var(--ink-10); overflow: hidden; }
+  .col { position: absolute; top: 0; bottom: 0; background: rgba(137,88,58,0.07); }
+  .skeleton { background: repeating-linear-gradient(135deg, rgba(137,88,58,0.18) 0 4px, transparent 4px 8px); }
+  .content { position: absolute; top: 28px; left: 0; right: 116px; padding: 0 28px; }
+  .h { font-family: var(--font-display-en); font-size: 34px; font-weight: 300; line-height: 1.04; color: var(--ink); }
+  .b { font-family: var(--font-body-en); font-size: 11px; color: var(--ink-70); margin-top: 14px; max-width: 340px; line-height: 1.6; }
+  .legend { display: flex; gap: 18px; font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: var(--ink-70); }
+  .swatch { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: middle; border: 1px solid var(--ink-20); }
+</style>
+</head>
+<body>
+  <div class="card">
+    <span class="eyebrow">Layout · 8-column grid + skeleton reserve</span>
+    <div class="grid">
+      <!-- 8 columns rendered as bands. Last column is the skeleton reserve. -->
+      <div class="col" style="left:0%; width:11%"></div>
+      <div class="col" style="left:12.5%; width:11%"></div>
+      <div class="col" style="left:25%; width:11%"></div>
+      <div class="col" style="left:37.5%; width:11%"></div>
+      <div class="col" style="left:50%; width:11%"></div>
+      <div class="col" style="left:62.5%; width:11%"></div>
+      <div class="col" style="left:75%; width:11%"></div>
+      <div class="col skeleton" style="right:0; width:11%"></div>
+
+      <div class="content">
+        <div class="h">Architectural choreography of an event space.</div>
+        <div class="b">Eight columns at 80 px, 32 px gutter, on a 1440 px design width. The rightmost column is reserved — left intentionally empty. This is the brand's signature use of structured negative space.</div>
+      </div>
+    </div>
+    <div class="legend">
+      <span><span class="swatch" style="background:rgba(137,88,58,0.07)"></span>Content columns × 7</span>
+      <span><span class="swatch" style="background:repeating-linear-gradient(135deg, rgba(137,88,58,0.18) 0 4px, transparent 4px 8px)"></span>Skeleton reserve (96 px)</span>
+    </div>
+  </div>
+</body>
+</html>
