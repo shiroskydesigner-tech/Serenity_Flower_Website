@@ -27,9 +27,10 @@ const {
   size = 96,
   alt = 'SERENITY FLOWER · 靜謐花間',
 } = Astro.props;
-const src = compact ? '/logo/wordmark-compact.svg' : '/logo/Logo_web-06.svg';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const src = compact ? `${base}/logo/wordmark-compact.svg` : `${base}/logo/Logo_web-06.svg`;
 ---
-<a href="/" class="sf-wordmark" aria-label={alt}>
+<a href={`${import.meta.env.BASE_URL}`} class="sf-wordmark" aria-label={alt}>
   <img src={src} alt={alt} style={`height:${size}px`} />
 </a>
 
